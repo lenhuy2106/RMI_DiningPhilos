@@ -20,9 +20,9 @@ import vss.rmi.diningphilos.server.n.remote.objects.Master;
 public interface RemoteTable extends Remote {
     void init(final int nSeats) throws RemoteException;
     int getCoreCount() throws RemoteException;
-    void callAll() throws RemoteException;
+    void callOne() throws RemoteException;
     Seat[] getSeats() throws RemoteException;
     Fork[] getForks() throws RemoteException;
-    Master getMaster() throws RemoteException;
-    void setMaster(final Master master) throws RemoteException;
+//    Master getMaster() throws RemoteException;
+//    void setMaster(final Master master) throws RemoteException;
 }

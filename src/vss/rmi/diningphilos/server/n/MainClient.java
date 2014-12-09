@@ -22,7 +22,7 @@ import vss.rmi.diningphilos.server.n.remote.objects.Table;
  *
  * @author T500
  */
-public class MainServer implements Remote {
+public class MainClient implements Remote {
 
     public static void main(String[] args) {
 
@@ -40,9 +40,9 @@ public class MainServer implements Remote {
             System.out.println("table " + id + " ready.");
 
         } catch (RemoteException ex) {
-            Logger.getLogger(MainServer.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(MainClient.class.getName()).log(Level.SEVERE, null, ex);
         } catch (AlreadyBoundException ex) {
-            Logger.getLogger(MainServer.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(MainClient.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 }

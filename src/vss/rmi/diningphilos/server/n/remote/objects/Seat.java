@@ -50,6 +50,6 @@ public class Seat {
     public void leave() {
         holder = null;
         free = true;
-        table.callAll();
+        table.callOne();
     }
 }

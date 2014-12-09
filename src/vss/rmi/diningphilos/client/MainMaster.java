@@ -22,7 +22,7 @@ import vss.rmi.diningphilos.server.n.remote.objects.Table;
  *
  * @author T500
  */
-public class MainClient {
+public class MainMaster {
 
     /**
      * Die Main Methode liest eine Anzahl an Philosophen und Sitzen und

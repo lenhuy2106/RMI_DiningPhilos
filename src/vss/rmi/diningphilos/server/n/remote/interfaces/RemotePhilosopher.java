@@ -14,7 +14,6 @@ import java.rmi.Remote;
  * @author T500
  */
 public interface RemotePhilosopher extends Remote {
-    void come();
     int lookForSeat();
     void eat()throws InterruptedException;
     void run();

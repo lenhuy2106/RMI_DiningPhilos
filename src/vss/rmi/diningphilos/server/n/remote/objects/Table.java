@@ -44,9 +44,14 @@ public class Table implements RemoteTable {
         return Runtime.getRuntime().availableProcessors();
     }
 
-    public void callAll() {
+    public void callOne() {
         for (Philosopher phil : master.getPhilosophers()) {
-            phil.come();
+            if (phil.getState().equals(Thread.State.WAITING)) {
+                synchronized (phil) {
+                    phil.notify();
+                }
+                break;
+            }
         }
     }
 

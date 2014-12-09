@@ -8,8 +8,6 @@
 
 package vss.rmi.diningphilos.server.n.remote.objects;
 
-import vss.rmi.diningphilos.server.n.remote.objects.Philosopher;
-
 /**
  * Ein Master ist eine Thread-Unterklasse, die alle Philosophen zu
  * einem Tisch kennt. Er berechnet fortlaufend die größte Differenz

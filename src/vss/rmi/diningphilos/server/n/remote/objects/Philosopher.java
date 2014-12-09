@@ -36,8 +36,6 @@ public class Philosopher extends Thread implements RemotePhilosopher {
     /** Currently banned or not. */
     private boolean banned;
 
-    private volatile boolean wait;
-
     private final int tableLength;
 
     /**
@@ -52,12 +50,7 @@ public class Philosopher extends Thread implements RemotePhilosopher {
         this.hungry = hungry;
         meals = 0;
         banned = false;
-        wait = false;
         tableLength = table.getSeats().length;
-    }
-
-    public void come() {
-        wait = false;
     }
 
     public int lookForSeat() {
@@ -71,7 +64,6 @@ public class Philosopher extends Thread implements RemotePhilosopher {
             cur = clockwise ? i : (tableLength-1)-i;
 
             if (table.getSeats()[cur].sit(this)) {
-                wait = false;
                 free = cur;
                 break;
             }
@@ -91,14 +83,19 @@ public class Philosopher extends Thread implements RemotePhilosopher {
         Fork second;
 
         System.out.printf("%-30s %s %n", name, "seaches seat.");
-
+        
         // waiting for a seat
         while (true) {
-            if (!wait) {
+//            if (!wait) {
+
                 i = lookForSeat();
                 if (i != -1) {
                     break;
                 }
+//            }
+            synchronized (this) {
+                System.out.println(name + " is waiting.");
+                this.wait();
             }
         }
 
