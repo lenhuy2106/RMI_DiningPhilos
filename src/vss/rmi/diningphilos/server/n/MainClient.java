@@ -26,15 +26,16 @@ public class MainClient implements Remote {
 
     public static void main(String[] args) {
 
+        String serverIp = "localhost";
+
         try {
             Table table = new Table();
 
             RemoteTable stubTable = (RemoteTable) UnicastRemoteObject.exportObject(table, 0);
 
-            LocateRegistry.createRegistry(1099);
-            Registry registry = LocateRegistry.getRegistry();
+            Registry registry = LocateRegistry.getRegistry(serverIp, 1099);
 
-            int id = registry.list().length;;
+            int id = registry.list().length;
             registry.bind("table" + id, stubTable);
 
             System.out.println("table " + id + " ready.");
