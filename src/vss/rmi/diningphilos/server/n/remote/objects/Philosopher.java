@@ -8,6 +8,9 @@
 
 package vss.rmi.diningphilos.server.n.remote.objects;
 
+import java.rmi.RemoteException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import vss.rmi.diningphilos.server.n.remote.interfaces.RemotePhilosopher;
 
 /**
@@ -78,14 +81,15 @@ public class Philosopher extends Thread implements RemotePhilosopher {
      */
     public void eat() throws InterruptedException {
 
-        int i = 0;
-        Fork first;
-        Fork second;
+        try {
+            int i = 0;
+            Fork first;
+            Fork second;
 
-        System.out.printf("%-30s %s %n", name, "seaches seat.");
+            System.out.printf("%-30s %s %n", name, "seaches seat.");
 
-        // waiting for a seat
-        while (true) {
+            // waiting for a seat
+            while (true) {
 //            if (!wait) {
 
                 i = lookForSeat();
@@ -93,41 +97,45 @@ public class Philosopher extends Thread implements RemotePhilosopher {
                     break;
                 }
 //            }
-            synchronized (this) {
-                System.out.println(name + " is waiting.");
-                this.wait();
-            }
-        }
-
-        final int left = (i) % tableLength;
-        final int right = (i + 1) % tableLength;
-
-        System.out.printf("%-45s %s %n", name, "needs forks.");
-
-        //waiting for fork
-        while (true) {
-
-            // left or right first
-            final boolean decision = Math.random() < 0.5;
-            first = decision ? table.getForks()[left] : table.getForks()[right];
-            second = decision ? table.getForks()[right] : table.getForks()[left];
-
-            if (first.pick(this)) {
-                if (second.pick(this)) {
-                    break;
-                } else {
-                    first.drop();
+                synchronized (this) {
+                    System.out.println(name + " is waiting.");
+                    this.wait();
                 }
             }
+
+            final int left = (i) % tableLength;
+            final int right = (i + 1) % tableLength;
+
+            System.out.printf("%-45s %s %n", name, "needs forks.");
+
+            //waiting for fork
+            while (true) {
+
+                // left or right first
+                final boolean decision = Math.random() < 0.5;
+                first = decision ? table.getForks()[left] : table.getForks()[right];
+                second = decision ? table.getForks()[right] : table.getForks()[left];
+
+                if (first.pick(this)) {
+                    if (second.pick(this)) {
+                        break;
+                    } else {
+                        first.drop();
+                    }
+                }
+            }
+
+            System.out.printf("%-60s %s %d.%n", name, "eats at", i);
+            Thread.sleep(1);
+
+            second.drop();
+            first.drop();
+            table.getSeats()[i].leave();
+            meals++;
+            
+        } catch (RemoteException ex) {
+            Logger.getLogger(Philosopher.class.getName()).log(Level.SEVERE, null, ex);
         }
-
-        System.out.printf("%-60s %s %d.%n", name, "eats at", i);
-        Thread.sleep(1);
-
-        second.drop();
-        first.drop();
-        table.getSeats()[i].leave();
-        meals++;
     }
 
     public State getThreadState() {

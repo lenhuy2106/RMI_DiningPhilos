@@ -110,10 +110,10 @@ public class MainServer {
                 // create and introduce philos
                 for (; j < philosPerStub; j++) {
                     if (Arrays.asList(hungry).contains(j+"")) {
-                        stubTable.addPhilosopher(j, "id " + j, true);
+                        master.getPhilosophers()[j] = stubTable.addPhilosopher(j, "id " + j, true);
                         System.out.println("id " + j + " stomach seems to growl faster.");
                     } else {
-                        stubTable.addPhilosopher(j, "id " + j, false);
+                        master.getPhilosophers()[j] = stubTable.addPhilosopher(j, "id " + j, false);
                     }
                 }
             }

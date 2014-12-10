@@ -50,16 +50,21 @@ public class Table implements RemoteTable {
         // forks[nSeats] =
     }
 
-    public void addPhilosopher(final int id, final String name, final boolean hungry) {
+    public RemotePhilosopher addPhilosopher(final int id, final String name, final boolean hungry) {
+
+        RemotePhilosopher stubPhilo = null;
+
         try {
             Philosopher ph = new Philosopher(name, this, hungry);
-            RemoteMaster stubMaster = (RemoteMaster) MainClient.registry.lookup("master");
-            RemotePhilosopher stubPhilo = (RemotePhilosopher) UnicastRemoteObject.exportObject(ph, 0);
-            stubMaster.addPhilosopher(id, stubPhilo);
+            stubPhilo = (RemotePhilosopher) UnicastRemoteObject.exportObject(ph, 0);
 
-        } catch (RemoteException | NotBoundException ex) {
+            //RemoteMaster stubMaster = (RemoteMaster) MainClient.registry.lookup("master");
+            //stubMaster.addPhilosopher(id, stubPhilo);
+
+        } catch (RemoteException ex) {
             Logger.getLogger(Table.class.getName()).log(Level.SEVERE, null, ex);
         }
+        return stubPhilo;
     }
 
     public int getCoreCount() {

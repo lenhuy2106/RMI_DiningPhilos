@@ -31,7 +31,7 @@ public class Master extends Thread implements RemoteMaster {
      * @param nPhilosophers Number of philosophers.
      */
     public Master(final int nPhilosophers) {
-        philosophers = new Philosopher[nPhilosophers];
+        philosophers = new RemotePhilosopher[nPhilosophers];
     }
 
     /**
@@ -82,8 +82,8 @@ public class Master extends Thread implements RemoteMaster {
         return philosophers;
     }
 
-    public boolean addPhilosopher(final int id, RemotePhilosopher rph){
-        if (id <= philosophers.length){
+    public boolean addPhilosopher(final int id, RemotePhilosopher rph) {
+        if (id <= philosophers.length) {
             philosophers[id] = rph;
             return true;
         } else {

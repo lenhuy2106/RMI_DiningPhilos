@@ -19,7 +19,7 @@ import vss.rmi.diningphilos.server.n.remote.objects.Master;
  */
 public interface RemoteTable extends Remote {
     void init(final int nSeats) throws RemoteException;
-    void addPhilosopher(final int id, final String name, final boolean hungry) throws RemoteException;;
+    RemotePhilosopher addPhilosopher(final int id, final String name, final boolean hungry) throws RemoteException;;
     int getCoreCount() throws RemoteException;
     void callOne() throws RemoteException;
     Seat[] getSeats() throws RemoteException;
