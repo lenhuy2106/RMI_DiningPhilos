@@ -44,7 +44,7 @@ public class MainServer {
 
         // TODO: create dialogue add/remove objects
         // read console input
-        System.out.println("Number Philosophers:");
+/*        System.out.println("Number Philosophers:");
         final int nPhilosophers = in.nextInt();
         System.out.println("Index of very hungry Philosophers (seperated by space):");
         String hungryInput = "";
@@ -60,6 +60,12 @@ public class MainServer {
         // dynamic number of clients/tableparts?
         System.out.println("Number TableParts:");
         final int nTableParts = in.nextInt();
+*/
+
+        int nPhilosophers = 2;
+        String[] hungry = {"0"};
+        int nSeats = 2;
+        int nTableParts = 1;
 
         try {
 
