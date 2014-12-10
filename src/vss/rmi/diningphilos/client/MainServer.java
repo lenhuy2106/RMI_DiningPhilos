@@ -19,7 +19,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteMaster;
 import vss.rmi.diningphilos.server.n.remote.interfaces.RemotePhilosopher;
-import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteTable;
+import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteTablepart;
 import vss.rmi.diningphilos.server.n.remote.objects.Master;
 
 /**
@@ -64,7 +64,7 @@ public class MainServer {
         int nPhilosophers = 2;
         String[] hungry = {"0"};
         int nSeats = 2;
-        int nTableParts = 1;
+        int nTableparts = 1;
 
 
         try {
@@ -74,7 +74,7 @@ public class MainServer {
             Registry registry = LocateRegistry.getRegistry();
 
             // initiate and bind master
-            Master master = new Master(nPhilosophers);
+            Master master = new Master(nPhilosophers, nTableparts);
             RemoteMaster stubMaster = (RemoteMaster) UnicastRemoteObject.exportObject(master, 0);
             registry.bind("master", stubMaster);
 
@@ -83,39 +83,48 @@ public class MainServer {
             // TODO: length volatile ?
 
             // !! length von tables
-            while (registry.list().length-1 < nTableParts) {
+            while (registry.list().length-1 < nTableparts) {
             }
 
             System.out.println("Connected.");
 
             // communication with clients --> tables
 
-            RemoteTable[] remoteTables = new RemoteTable[nTableParts];
-
             // TODO: gleichmäßige verteilung
-            int seatsPerStub = nSeats / nTableParts;
+            int seatsPerStub = nSeats / nTableparts;
             // TODO: lastenabhängige verteilung
             // int cores = stubTable.getCoreCount();
-            int philosPerStub = nPhilosophers / nTableParts;
+            int philosPerStub = nPhilosophers / nTableparts;
 
             // get remote tables
-            int i = 1;
             int j = 0;
-            for (RemoteTable stubTable : remoteTables) {
-                stubTable = (RemoteTable) registry.lookup("table" + i++);
+            for (int i = 0; i < nTableparts; i++) {
+
+                // master knows all table parts
+                RemoteTablepart tablepart = (RemoteTablepart) registry.lookup("table" + i);
                 System.out.println("table " + i + " found.");
 
-                stubTable.init(seatsPerStub);
+                // !! init local
+                tablepart.initLocal(seatsPerStub);
+                master.getTableparts()[i] = tablepart;
+
 
                 // create and introduce philos
                 for (; j < philosPerStub; j++) {
                     if (Arrays.asList(hungry).contains(j+"")) {
-                        master.getPhilosophers()[j] = stubTable.addPhilosopher(j, "id " + j, true);
+
+                        // !!
+                        master.getPhilosophers()[j] = tablepart.addPhilosopher(j, "id " + j, true, nSeats);
                         System.out.println("id " + j + " stomach seems to growl faster.");
                     } else {
-                        master.getPhilosophers()[j] = stubTable.addPhilosopher(j, "id " + j, false);
+                        master.getPhilosophers()[j] = tablepart.addPhilosopher(j, "id " + j, false, nSeats);
                     }
                 }
+            }
+
+            // init global
+            for (RemoteTablepart tablepart : master.getTableparts()) {
+                tablepart.initGlobal();
             }
 
             // --------------------------------------

@@ -16,5 +16,7 @@ import java.rmi.RemoteException;
  */
 public interface RemoteMaster extends Remote {
     RemotePhilosopher[] getPhilosophers() throws RemoteException;
+    RemoteTablepart[] getTableparts() throws RemoteException;
     boolean addPhilosopher(final int id, RemotePhilosopher ph) throws RemoteException;
+    // TODO: recoverTable()
 }

@@ -11,6 +11,7 @@ package vss.rmi.diningphilos.server.n.remote.objects;
 import java.rmi.RemoteException;
 import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteMaster;
 import vss.rmi.diningphilos.server.n.remote.interfaces.RemotePhilosopher;
+import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteTablepart;
 
 /**
  * Ein Master ist eine Thread-Unterklasse, die alle Philosophen zu
@@ -25,13 +26,16 @@ public class Master extends Thread implements RemoteMaster {
 
     /** Array of all philosophers. */
     private final RemotePhilosopher[] philosophers;
+    private final RemoteTablepart[] tableparts;
 
     /**
      * Ctor.
      * @param nPhilosophers Number of philosophers.
+     * @param nTableparts
      */
-    public Master(final int nPhilosophers) {
+    public Master(final int nPhilosophers, final int nTableparts) {
         philosophers = new RemotePhilosopher[nPhilosophers];
+        tableparts = new RemoteTablepart[nTableparts];
     }
 
     /**
@@ -81,6 +85,15 @@ public class Master extends Thread implements RemoteMaster {
     public RemotePhilosopher[] getPhilosophers() {
         return philosophers;
     }
+
+    /**
+     * Getter.
+     * @return Tableparts array.
+     */
+    public RemoteTablepart[] getTableparts() {
+        return tableparts;
+    }
+
 
     public boolean addPhilosopher(final int id, RemotePhilosopher rph) {
         if (id <= philosophers.length) {

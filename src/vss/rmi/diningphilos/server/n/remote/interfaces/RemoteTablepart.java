@@ -14,13 +14,14 @@ import java.rmi.RemoteException;
  *
  * @author T500
  */
-public interface RemoteTable extends Remote {
-    void init(final int nSeats) throws RemoteException;
-    RemotePhilosopher addPhilosopher(final int id, final String name, final boolean hungry) throws RemoteException;;
+public interface RemoteTablepart extends Remote {
+    void initLocal(final int nSeats) throws RemoteException;
+    void initGlobal() throws RemoteException;
+    RemotePhilosopher addPhilosopher(final int id, final String name, final boolean hungry, final int nSeats) throws RemoteException;;
     int getCoreCount() throws RemoteException;
     void callOne() throws RemoteException;
-    RemoteSeat[] getSeats() throws RemoteException;
-    RemoteFork[] getForks() throws RemoteException;
+    RemoteSeat[] getOwnSeats() throws RemoteException;
+    RemoteFork[] getOwnForks() throws RemoteException;
     RemoteMaster getMaster() throws RemoteException;
     void setMaster(final RemoteMaster master) throws RemoteException;
 }

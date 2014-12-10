@@ -9,10 +9,12 @@
 package vss.rmi.diningphilos.server.n.remote.objects;
 
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteFork;
 import vss.rmi.diningphilos.server.n.remote.interfaces.RemotePhilosopher;
+import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteSeat;
 
 /**
  * Philosoph Thread-Klasse.
@@ -32,7 +34,7 @@ public class Philosopher extends Thread implements RemotePhilosopher {
     /** Name of the philosopher. */
     private final String name;
     /** Table of the philosopher. */
-    private final TablePart table;
+    private final Tablepart tablepart;
     /** Hungry or not. */
     private final boolean hungry;
     /** Meal counter. */
@@ -40,21 +42,30 @@ public class Philosopher extends Thread implements RemotePhilosopher {
     /** Currently banned or not. */
     private boolean banned;
 
-    private final int tableLength;
+    private final int nAllSeats;
+
+    private RemotePhilosopher remoteMe = null;
 
     /**
      * Ctor.
      * @param name Name of the philosopher.
-     * @param table Table of the Philosopher.
+     * @param tablePart Table of the Philosopher.
      * @param hungry Hungry or not.
      */
-    public Philosopher(final String name, final TablePart table, final boolean hungry) {
+    public Philosopher(final String name, final Tablepart tablePart, final boolean hungry, final int nSeats) {
         this.name = name;
-        this.table = table;
+        this.tablepart = tablePart;
+        this.nAllSeats = nSeats;
         this.hungry = hungry;
         meals = 0;
         banned = false;
-        tableLength = table.getSeats().length;
+
+        // remote itself
+        try {
+            remoteMe = (RemotePhilosopher) UnicastRemoteObject.exportObject(this, 0);
+        } catch (RemoteException ex) {
+            Logger.getLogger(Philosopher.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     public int lookForSeat() throws RemoteException {
@@ -62,14 +73,29 @@ public class Philosopher extends Thread implements RemotePhilosopher {
         int free = -1;
         int cur = -1;
         final boolean clockwise = Math.random() < 0.5;
+        int tablePartLength = tablepart.getOwnSeats().length;
+        System.err.println(tablePartLength);
 
-        for (int i = 0; i < tableLength; i++) {
+        /* random direction?
+        // local look
+        for (int i = 0; i < tablePartLength; i++) {
 
-            cur = clockwise ? i : (tableLength-1)-i;
+            cur = clockwise ? i : (tablePartLength-1)-i;
 
-            if (table.getSeats()[cur].sit(this)) {
+            if (tablepart.getOwnSeats()[cur].sit(this)) {
                 free = cur;
                 break;
+            }
+        }
+        */
+
+        // remote look
+        if (free == -1) {
+            for (RemoteSeat seat : tablepart.getAllSeats()) {
+                if (seat.sit(remoteMe)) {
+                    free = cur;
+                    break;
+                }
             }
         }
 
@@ -97,14 +123,15 @@ public class Philosopher extends Thread implements RemotePhilosopher {
                     break;
                 }
 
+                // TODO: remoteMe ot this?
                 synchronized (this) {
                     System.out.println(name + " is waiting.");
                     this.wait();
                 }
             }
 
-            final int left = (i) % tableLength;
-            final int right = (i + 1) % tableLength;
+            final int left = (i) % nAllSeats;
+            final int right = (i + 1) % nAllSeats;
 
             System.out.printf("%-45s %s %n", name, "needs forks.");
 
@@ -113,11 +140,11 @@ public class Philosopher extends Thread implements RemotePhilosopher {
 
                 // left or right first
                 final boolean decision = Math.random() < 0.5;
-                first = decision ? table.getForks()[left] : table.getForks()[right];
-                second = decision ? table.getForks()[right] : table.getForks()[left];
+                first = decision ? tablepart.getAllForks().get(left) : tablepart.getAllForks().get(right);
+                second = decision ? tablepart.getAllForks().get(right) : tablepart.getAllForks().get(left);
 
-                if (first.pick(this)) {
-                    if (second.pick(this)) {
+                if (first.pick(remoteMe)) {
+                    if (second.pick(remoteMe)) {
                         break;
                     } else {
                         first.drop();
@@ -130,7 +157,7 @@ public class Philosopher extends Thread implements RemotePhilosopher {
 
             second.drop();
             first.drop();
-            table.getSeats()[i].leave();
+            tablepart.getOwnSeats()[i].leave();
             meals++;
 
         } catch (RemoteException ex) {

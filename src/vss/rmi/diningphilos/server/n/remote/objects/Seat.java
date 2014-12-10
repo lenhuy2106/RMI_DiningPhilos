@@ -26,9 +26,9 @@ public class Seat implements RemoteSeat {
     private RemotePhilosopher holder;
     /** Free or not free. */
     private boolean free = true;
-    private final TablePart table;
+    private final Tablepart table;
 
-    public Seat(final TablePart table) {
+    public Seat(final Tablepart table) {
         this.table = table;
     }
 

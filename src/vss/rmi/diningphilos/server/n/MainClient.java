@@ -15,8 +15,8 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteTable;
-import vss.rmi.diningphilos.server.n.remote.objects.TablePart;
+import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteTablepart;
+import vss.rmi.diningphilos.server.n.remote.objects.Tablepart;
 
 /**
  *
@@ -31,12 +31,12 @@ public class MainClient implements Remote {
         String serverIp = "localhost";
 
         try {
-            TablePart table = new TablePart();
+            Tablepart table = new Tablepart();
 
-            RemoteTable stubTable = (RemoteTable) UnicastRemoteObject.exportObject(table, 0);
+            RemoteTablepart stubTable = (RemoteTablepart) UnicastRemoteObject.exportObject(table, 0);
             registry = LocateRegistry.getRegistry(serverIp, 1099);
 
-            int id = registry.list().length;
+            int id = registry.list().length-1; // minus master
             registry.bind("table" + id, stubTable);
 
             System.out.println("table " + id + " ready.");
