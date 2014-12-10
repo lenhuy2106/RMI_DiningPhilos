@@ -24,6 +24,6 @@ public interface RemoteTable extends Remote {
     void callOne() throws RemoteException;
     Seat[] getSeats() throws RemoteException;
     Fork[] getForks() throws RemoteException;
-    Master getMaster() throws RemoteException;
+    RemoteMaster getMaster() throws RemoteException;
     void setMaster(final Master master) throws RemoteException;
 }

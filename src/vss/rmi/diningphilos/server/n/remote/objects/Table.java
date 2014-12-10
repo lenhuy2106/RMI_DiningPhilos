@@ -29,7 +29,7 @@ public class Table implements RemoteTable {
 
     private Seat[] seats;
     private Fork[] forks;
-    private Master master;
+    private RemoteMaster master;
 
     public Table() {}
 
@@ -39,15 +39,21 @@ public class Table implements RemoteTable {
      */
     public void init(final int nSeats) {
 
-        seats = new Seat[nSeats];
-        forks = new Fork[nSeats];
+        try {
+            seats = new Seat[nSeats];
+            forks = new Fork[nSeats];
+            master = (RemoteMaster) MainClient.registry.lookup("master");
 
-        for (int i = 0; i < nSeats-1; i++) {
-            seats[i] = new Seat(this);
-            forks[i] = new Fork();
+            for (int i = 0; i < nSeats; i++) {
+                seats[i] = new Seat(this);
+                forks[i] = new Fork();
+            }
+            // last fork is remote
+            // forks[nSeats] =
+
+        } catch (RemoteException | NotBoundException ex) {
+            Logger.getLogger(Table.class.getName()).log(Level.SEVERE, null, ex);
         }
-        // last fork is remote
-        // forks[nSeats] =
     }
 
     public RemotePhilosopher addPhilosopher(final int id, final String name, final boolean hungry) {
@@ -57,9 +63,6 @@ public class Table implements RemoteTable {
         try {
             Philosopher ph = new Philosopher(name, this, hungry);
             stubPhilo = (RemotePhilosopher) UnicastRemoteObject.exportObject(ph, 0);
-
-            //RemoteMaster stubMaster = (RemoteMaster) MainClient.registry.lookup("master");
-            //stubMaster.addPhilosopher(id, stubPhilo);
 
         } catch (RemoteException ex) {
             Logger.getLogger(Table.class.getName()).log(Level.SEVERE, null, ex);
@@ -98,7 +101,7 @@ public class Table implements RemoteTable {
         return forks;
     }
 
-    public Master getMaster() {
+    public RemoteMaster getMaster() {
         return master;
     }
 

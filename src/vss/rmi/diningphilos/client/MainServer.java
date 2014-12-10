@@ -136,7 +136,7 @@ public class MainServer {
             master.start();
 
             // run time
-            Thread.sleep(60000);
+            Thread.sleep(15000);
 
             System.out.println("table closes.");
             // stop all
