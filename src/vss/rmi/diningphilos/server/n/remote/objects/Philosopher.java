@@ -83,7 +83,7 @@ public class Philosopher extends Thread implements RemotePhilosopher {
         Fork second;
 
         System.out.printf("%-30s %s %n", name, "seaches seat.");
-        
+
         // waiting for a seat
         while (true) {
 //            if (!wait) {
@@ -128,6 +128,22 @@ public class Philosopher extends Thread implements RemotePhilosopher {
         first.drop();
         table.getSeats()[i].leave();
         meals++;
+    }
+
+    public State getThreadState() {
+        return getState();
+    }
+
+    public void setThreadDaemon(final boolean flag) {
+        this.setDaemon(flag);
+    }
+
+    public void threadStart() {
+        this.start();
+    }
+
+    public void threadInterrupt() {
+        this.interrupt();
     }
 
     /**
