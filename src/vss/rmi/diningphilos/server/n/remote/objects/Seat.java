@@ -8,6 +8,8 @@
 
 package vss.rmi.diningphilos.server.n.remote.objects;
 
+import java.rmi.RemoteException;
+
 /**
  *Ein Platz ist eine gemeinsam genutzte Klasse.
  * Er weiß, ob er besetzt ist und wer auf ihm sitzt. Er kann von Philosophen
@@ -47,7 +49,7 @@ public class Seat {
     /**
      * Leave the seat.
      */
-    public void leave() {
+    public void leave() throws RemoteException {
         holder = null;
         free = true;
         table.callOne();
