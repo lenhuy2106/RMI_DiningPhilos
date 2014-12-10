@@ -9,9 +9,6 @@ package vss.rmi.diningphilos.server.n.remote.interfaces;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import vss.rmi.diningphilos.server.n.remote.objects.Seat;
-import vss.rmi.diningphilos.server.n.remote.objects.Fork;
-import vss.rmi.diningphilos.server.n.remote.objects.Master;
 
 /**
  *
@@ -22,8 +19,8 @@ public interface RemoteTable extends Remote {
     RemotePhilosopher addPhilosopher(final int id, final String name, final boolean hungry) throws RemoteException;;
     int getCoreCount() throws RemoteException;
     void callOne() throws RemoteException;
-    Seat[] getSeats() throws RemoteException;
-    Fork[] getForks() throws RemoteException;
+    RemoteSeat[] getSeats() throws RemoteException;
+    RemoteFork[] getForks() throws RemoteException;
     RemoteMaster getMaster() throws RemoteException;
-    void setMaster(final Master master) throws RemoteException;
+    void setMaster(final RemoteMaster master) throws RemoteException;
 }

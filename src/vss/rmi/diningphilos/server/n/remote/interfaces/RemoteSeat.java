@@ -8,13 +8,13 @@
 package vss.rmi.diningphilos.server.n.remote.interfaces;
 
 import java.rmi.Remote;
-import vss.rmi.diningphilos.server.n.remote.objects.Philosopher;
+import java.rmi.RemoteException;
 
 /**
  *
  * @author T500
  */
 public interface RemoteSeat extends Remote {
-    boolean sit(Philosopher examiner);
-    void leave();
+    boolean sit(RemotePhilosopher examiner) throws RemoteException;
+    void leave() throws RemoteException;
 }

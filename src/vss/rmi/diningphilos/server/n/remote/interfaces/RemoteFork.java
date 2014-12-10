@@ -8,7 +8,7 @@
 package vss.rmi.diningphilos.server.n.remote.interfaces;
 
 import java.rmi.Remote;
-import vss.rmi.diningphilos.server.n.remote.objects.Philosopher;
+import java.rmi.RemoteException;
 
 /**
  *
@@ -16,6 +16,6 @@ import vss.rmi.diningphilos.server.n.remote.objects.Philosopher;
  */
 public interface RemoteFork extends Remote {
     // synchronized
-    boolean pick(Philosopher examiner);
-    void drop();
+    boolean pick(RemotePhilosopher examiner) throws RemoteException;
+    void drop() throws RemoteException;
 }

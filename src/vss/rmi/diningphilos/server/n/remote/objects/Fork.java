@@ -9,6 +9,7 @@
 package vss.rmi.diningphilos.server.n.remote.objects;
 
 import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteFork;
+import vss.rmi.diningphilos.server.n.remote.interfaces.RemotePhilosopher;
 
 /**
  * Eine Gabel ist eine gemeinsam genutzte Klasse.
@@ -21,7 +22,7 @@ import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteFork;
 public class Fork implements RemoteFork {
 
     /** Current holder of fork. */
-    private Philosopher holder;
+    private RemotePhilosopher holder;
     /** Free or not free. */
     private boolean free = true;
 
@@ -30,7 +31,7 @@ public class Fork implements RemoteFork {
      * @param examiner Philosopher trying to pick.
      * @return Success or no success.
      */
-    public synchronized boolean pick(Philosopher examiner) {
+    public synchronized boolean pick(RemotePhilosopher examiner) {
         boolean success = false;
 
         if (free) {

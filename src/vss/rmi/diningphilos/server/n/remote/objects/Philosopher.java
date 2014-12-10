@@ -11,6 +11,7 @@ package vss.rmi.diningphilos.server.n.remote.objects;
 import java.rmi.RemoteException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteFork;
 import vss.rmi.diningphilos.server.n.remote.interfaces.RemotePhilosopher;
 
 /**
@@ -31,7 +32,7 @@ public class Philosopher extends Thread implements RemotePhilosopher {
     /** Name of the philosopher. */
     private final String name;
     /** Table of the philosopher. */
-    private final Table table;
+    private final TablePart table;
     /** Hungry or not. */
     private final boolean hungry;
     /** Meal counter. */
@@ -47,7 +48,7 @@ public class Philosopher extends Thread implements RemotePhilosopher {
      * @param table Table of the Philosopher.
      * @param hungry Hungry or not.
      */
-    public Philosopher(final String name, final Table table, final boolean hungry) {
+    public Philosopher(final String name, final TablePart table, final boolean hungry) {
         this.name = name;
         this.table = table;
         this.hungry = hungry;
@@ -56,7 +57,7 @@ public class Philosopher extends Thread implements RemotePhilosopher {
         tableLength = table.getSeats().length;
     }
 
-    public int lookForSeat() {
+    public int lookForSeat() throws RemoteException {
 
         int free = -1;
         int cur = -1;
@@ -83,20 +84,19 @@ public class Philosopher extends Thread implements RemotePhilosopher {
 
         try {
             int i = 0;
-            Fork first;
-            Fork second;
+            RemoteFork first;
+            RemoteFork second;
 
             System.out.printf("%-30s %s %n", name, "seaches seat.");
 
             // waiting for a seat
             while (true) {
-//            if (!wait) {
 
                 i = lookForSeat();
                 if (i != -1) {
                     break;
                 }
-//            }
+
                 synchronized (this) {
                     System.out.println(name + " is waiting.");
                     this.wait();
@@ -132,7 +132,7 @@ public class Philosopher extends Thread implements RemotePhilosopher {
             first.drop();
             table.getSeats()[i].leave();
             meals++;
-            
+
         } catch (RemoteException ex) {
             Logger.getLogger(Philosopher.class.getName()).log(Level.SEVERE, null, ex);
         }

@@ -9,6 +9,8 @@
 package vss.rmi.diningphilos.server.n.remote.objects;
 
 import java.rmi.RemoteException;
+import vss.rmi.diningphilos.server.n.remote.interfaces.RemotePhilosopher;
+import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteSeat;
 
 /**
  *Ein Platz ist eine gemeinsam genutzte Klasse.
@@ -18,15 +20,15 @@ import java.rmi.RemoteException;
  * synchronisiert sein.
  * @author Nhu-Huy Le, Mathias Long Yan
  */
-public class Seat {
+public class Seat implements RemoteSeat {
 
     /** Current holder of seat. */
-    private Philosopher holder;
+    private RemotePhilosopher holder;
     /** Free or not free. */
     private boolean free = true;
-    private final Table table;
+    private final TablePart table;
 
-    public Seat(final Table table) {
+    public Seat(final TablePart table) {
         this.table = table;
     }
 
@@ -35,7 +37,7 @@ public class Seat {
      * @param examiner Philosopher trying to sit.
      * @return Success or no success.
      */
-    public synchronized boolean sit(Philosopher examiner) {
+    public synchronized boolean sit(RemotePhilosopher examiner) {
         boolean success = false;
 
         if (free) {

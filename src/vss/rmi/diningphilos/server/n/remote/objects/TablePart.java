@@ -15,8 +15,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteTable;
 import vss.rmi.diningphilos.server.n.MainClient;
+import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteFork;
 import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteMaster;
 import vss.rmi.diningphilos.server.n.remote.interfaces.RemotePhilosopher;
+import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteSeat;
 
 /**
  * Tisch Main Klasse.
@@ -25,13 +27,13 @@ import vss.rmi.diningphilos.server.n.remote.interfaces.RemotePhilosopher;
  * nicht mehr auf sie zu.
  * @author Nhu-Huy Le, Mathias Long Yan
  */
-public class Table implements RemoteTable {
+public class TablePart implements RemoteTable {
 
-    private Seat[] seats;
-    private Fork[] forks;
+    private RemoteSeat[] seats;
+    private RemoteFork[] forks;
     private RemoteMaster master;
 
-    public Table() {}
+    public TablePart() {}
 
     /**
      * Ctor
@@ -40,8 +42,8 @@ public class Table implements RemoteTable {
     public void init(final int nSeats) {
 
         try {
-            seats = new Seat[nSeats];
-            forks = new Fork[nSeats];
+            seats = new RemoteSeat[nSeats];
+            forks = new RemoteFork[nSeats];
             master = (RemoteMaster) MainClient.registry.lookup("master");
 
             for (int i = 0; i < nSeats; i++) {
@@ -52,7 +54,7 @@ public class Table implements RemoteTable {
             // forks[nSeats] =
 
         } catch (RemoteException | NotBoundException ex) {
-            Logger.getLogger(Table.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(TablePart.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -62,10 +64,11 @@ public class Table implements RemoteTable {
 
         try {
             Philosopher ph = new Philosopher(name, this, hungry);
+            // wrap to remote
             stubPhilo = (RemotePhilosopher) UnicastRemoteObject.exportObject(ph, 0);
 
         } catch (RemoteException ex) {
-            Logger.getLogger(Table.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(TablePart.class.getName()).log(Level.SEVERE, null, ex);
         }
         return stubPhilo;
     }
@@ -89,7 +92,7 @@ public class Table implements RemoteTable {
      * Getter
      * @return Array of seats.
      */
-    public Seat[] getSeats() {
+    public RemoteSeat[] getSeats() {
         return seats;
     }
 
@@ -97,7 +100,7 @@ public class Table implements RemoteTable {
      * Getter
      * @return Array of forks.
      */
-    public Fork[] getForks() {
+    public RemoteFork[] getForks() {
         return forks;
     }
 
@@ -105,7 +108,7 @@ public class Table implements RemoteTable {
         return master;
     }
 
-    public void setMaster(Master master) {
+    public void setMaster(RemoteMaster master) {
         this.master = master;
     }
 }

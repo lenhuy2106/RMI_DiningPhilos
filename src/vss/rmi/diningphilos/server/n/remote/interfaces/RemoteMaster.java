@@ -9,7 +9,6 @@ package vss.rmi.diningphilos.server.n.remote.interfaces;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import vss.rmi.diningphilos.server.n.remote.objects.Philosopher;
 
 /**
  *
