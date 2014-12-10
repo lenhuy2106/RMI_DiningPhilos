@@ -7,7 +7,6 @@
 
 package vss.rmi.diningphilos.client;
 
-import java.rmi.AccessException;
 import java.rmi.AlreadyBoundException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -19,9 +18,9 @@ import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteMaster;
+import vss.rmi.diningphilos.server.n.remote.interfaces.RemotePhilosopher;
 import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteTable;
 import vss.rmi.diningphilos.server.n.remote.objects.Master;
-import vss.rmi.diningphilos.server.n.remote.objects.Philosopher;
 
 /**
  *
@@ -120,9 +119,10 @@ public class MainServer {
             System.out.println("table opens.");
 
             // start philosophers
-            for (final Philosopher cur : master.getPhilosophers()) {
-                cur.setDaemon(true);
-                cur.start();
+            for (final RemotePhilosopher cur : master.getPhilosophers()) {
+                System.out.println("found");
+                cur.setThreadDaemon(true);
+                cur.threadStart();
             }
 
             // start master
@@ -133,8 +133,8 @@ public class MainServer {
 
             System.out.println("table closes.");
             // stop all
-            for (final Philosopher cur : master.getPhilosophers()) {
-                cur.interrupt();
+            for (final RemotePhilosopher cur : master.getPhilosophers()) {
+                cur.threadInterrupt();
             }
             master.interrupt();
 

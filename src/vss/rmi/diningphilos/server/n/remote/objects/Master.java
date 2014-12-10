@@ -8,7 +8,9 @@
 
 package vss.rmi.diningphilos.server.n.remote.objects;
 
+import java.rmi.RemoteException;
 import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteMaster;
+import vss.rmi.diningphilos.server.n.remote.interfaces.RemotePhilosopher;
 
 /**
  * Ein Master ist eine Thread-Unterklasse, die alle Philosophen zu
@@ -22,7 +24,7 @@ import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteMaster;
 public class Master extends Thread implements RemoteMaster {
 
     /** Array of all philosophers. */
-    private final Philosopher[] philosophers;
+    private final RemotePhilosopher[] philosophers;
 
     /**
      * Ctor.
@@ -36,42 +38,56 @@ public class Master extends Thread implements RemoteMaster {
      * Start thread.
      */
     public void run() {
+        try {
 
-        while (!isInterrupted()) {
-            Philosopher min = philosophers[0];
-            Philosopher max = philosophers[0];
+            while (!isInterrupted()) {
+                RemotePhilosopher min = philosophers[0];
+                RemotePhilosopher max = philosophers[0];
 
-            if (philosophers[philosophers.length-1] != null) {
-                for (final Philosopher cur : philosophers) {
-                    if (cur.getMeals() < min.getMeals()) {
-                        min = cur;
-                    } else if (cur.getMeals() > max.getMeals()) {
-                        max = cur;
+                if (philosophers[philosophers.length-1] != null) {
+                    for (final RemotePhilosopher cur : philosophers) {
+                        if (cur.getMeals() < min.getMeals()) {
+                            min = cur;
+                        } else if (cur.getMeals() > max.getMeals()) {
+                            max = cur;
+                        }
+                    }
+
+                    // max differ of 5
+                    if (max.getMeals() - min.getMeals() > 5) {
+                        max.ban();
                     }
                 }
-
-                // max differ of 5
-                if (max.getMeals() - min.getMeals() > 5) {
-                    max.ban();
-                }
             }
-        }
-        System.out.println("master counts: ");
-        int total = 0;
+            System.out.println("master counts: ");
+            int total = 0;
 
-        for (final Philosopher cur : philosophers) {
-            total += cur.getMeals();
-            System.out.printf("%15s %s %3d meals.%n", cur.getPhilName(), "ate", cur.getMeals());
+            for (final RemotePhilosopher cur : philosophers) {
+                total += cur.getMeals();
+                System.out.printf("%15s %s %3d meals.%n", cur.getPhilName(), "ate", cur.getMeals());
+            }
+            System.out.printf("- %d meals in total.%n", total);
+            System.out.println("master leaves room.");
+
+        } catch (RemoteException rm) {
+            rm.printStackTrace();
         }
-        System.out.printf("- %d meals in total.%n", total);
-        System.out.println("master leaves room.");
     }
 
     /**
      * Getter.
      * @return Philosophers array.
      */
-    public Philosopher[] getPhilosophers() {
+    public RemotePhilosopher[] getPhilosophers() {
         return philosophers;
+    }
+
+    public boolean addPhilosopher(final int id, RemotePhilosopher rph){
+        if (id <= philosophers.length){
+            philosophers[id] = rph;
+            return true;
+        } else {
+            return false;
+        }
     }
 }

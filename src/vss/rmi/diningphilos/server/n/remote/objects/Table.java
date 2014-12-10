@@ -10,11 +10,13 @@ package vss.rmi.diningphilos.server.n.remote.objects;
 
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteTable;
 import vss.rmi.diningphilos.server.n.MainClient;
 import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteMaster;
+import vss.rmi.diningphilos.server.n.remote.interfaces.RemotePhilosopher;
 
 /**
  * Tisch Main Klasse.
@@ -50,8 +52,10 @@ public class Table implements RemoteTable {
 
     public void addPhilosopher(final int id, final String name, final boolean hungry) {
         try {
+            Philosopher ph = new Philosopher(name, this, hungry);
             RemoteMaster stubMaster = (RemoteMaster) MainClient.registry.lookup("master");
-            stubMaster.getPhilosophers()[id] = new Philosopher(name, this, hungry);
+            RemotePhilosopher stubPhilo = (RemotePhilosopher) UnicastRemoteObject.exportObject(ph, 0);
+            stubMaster.addPhilosopher(id, stubPhilo);
 
         } catch (RemoteException | NotBoundException ex) {
             Logger.getLogger(Table.class.getName()).log(Level.SEVERE, null, ex);
@@ -62,9 +66,9 @@ public class Table implements RemoteTable {
         return Runtime.getRuntime().availableProcessors();
     }
 
-    public void callOne() {
-        for (Philosopher phil : master.getPhilosophers()) {
-            if (phil.getState().equals(Thread.State.WAITING)) {
+    public void callOne() throws RemoteException {
+        for (RemotePhilosopher phil : master.getPhilosophers()) {
+            if (phil.getThreadState().equals(Thread.State.WAITING)) {
                 synchronized (phil) {
                     phil.notify();
                 }

@@ -16,5 +16,6 @@ import vss.rmi.diningphilos.server.n.remote.objects.Philosopher;
  * @author T500
  */
 public interface RemoteMaster extends Remote {
-    Philosopher[] getPhilosophers() throws RemoteException;
+    RemotePhilosopher[] getPhilosophers() throws RemoteException;
+    boolean addPhilosopher(final int id, RemotePhilosopher ph) throws RemoteException;
 }
