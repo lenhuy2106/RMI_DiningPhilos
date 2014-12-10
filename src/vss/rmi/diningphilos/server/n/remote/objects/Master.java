@@ -8,14 +8,7 @@
 
 package vss.rmi.diningphilos.server.n.remote.objects;
 
-import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
-import java.rmi.registry.Registry;
-import java.util.Arrays;
-import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteTable;
+import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteMaster;
 
 /**
  * Ein Master ist eine Thread-Unterklasse, die alle Philosophen zu
@@ -26,7 +19,7 @@ import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteTable;
  * der Main Klasse initiiert und terminiert.
  * @author Nhu-Huy Le, Mathias Long Yan
  */
-public class Master extends Thread {
+public class Master extends Thread implements RemoteMaster {
 
     /** Array of all philosophers. */
     private final Philosopher[] philosophers;
@@ -37,56 +30,6 @@ public class Master extends Thread {
      */
     public Master(final int nPhilosophers) {
         philosophers = new Philosopher[nPhilosophers];
-    }
-
-    public void initiate(Registry registry) {
-
-        try {
-
-            RemoteTable stubTable = (RemoteTable) registry.lookup("table0");
-
-            // --------------------------------------
-
-
-
-
-            System.out.println("master enters room.");
-
-            // create table
-            System.out.println("table opens.");
-            int cores = stubTable.getCoreCount();
-            // stubTable.setMaster(master); // TODO: serialize or not?
-            stubTable.init(nSeats);
-
-            for (int i = 0; i < nPhilosophers; i++) {
-                if (Arrays.asList(hungry).contains(i+"")) {
-                    master.getPhilosophers()[i] = new Philosopher("id " + i, (Table) stubTable, true);
-                    System.out.println("id " + i + " stomach seems to growl faster.");
-                } else {
-                    master.getPhilosophers()[i] = new Philosopher("id " + i, (Table) stubTable, false);
-                }
-            }
-
-            // start philosophers
-            for (final Philosopher cur : master.getPhilosophers()) {
-                cur.setDaemon(true);
-                cur.start();
-            }
-
-            // run time
-            Thread.sleep(60000);
-
-            System.out.println("table closes.");
-            // stop all
-            for (final Philosopher cur : master.getPhilosophers()) {
-                cur.interrupt();
-            }
-
-            master.interrupt();
-
-        } catch (InterruptedException | RemoteException | NotBoundException e) {
-            e.printStackTrace();
-        }
     }
 
     /**

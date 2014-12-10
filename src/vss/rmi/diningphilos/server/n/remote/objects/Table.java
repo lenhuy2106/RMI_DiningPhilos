@@ -8,7 +8,13 @@
 
 package vss.rmi.diningphilos.server.n.remote.objects;
 
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteTable;
+import vss.rmi.diningphilos.server.n.MainClient;
+import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteMaster;
 
 /**
  * Tisch Main Klasse.
@@ -34,9 +40,21 @@ public class Table implements RemoteTable {
         seats = new Seat[nSeats];
         forks = new Fork[nSeats];
 
-        for (int i = 0; i < nSeats; i++) {
+        for (int i = 0; i < nSeats-1; i++) {
             seats[i] = new Seat(this);
             forks[i] = new Fork();
+        }
+        // last fork is remote
+        // forks[nSeats] =
+    }
+
+    public void addPhilosopher(final int id, final String name, final boolean hungry) {
+        try {
+            RemoteMaster stubMaster = (RemoteMaster) MainClient.registry.lookup("master");
+            stubMaster.getPhilosophers()[id] = new Philosopher(name, this, hungry);
+
+        } catch (RemoteException | NotBoundException ex) {
+            Logger.getLogger(Table.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 

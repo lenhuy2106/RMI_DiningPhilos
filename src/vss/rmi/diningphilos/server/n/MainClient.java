@@ -24,6 +24,8 @@ import vss.rmi.diningphilos.server.n.remote.objects.Table;
  */
 public class MainClient implements Remote {
 
+    public static Registry registry;
+
     public static void main(String[] args) {
 
         String serverIp = "localhost";
@@ -32,17 +34,14 @@ public class MainClient implements Remote {
             Table table = new Table();
 
             RemoteTable stubTable = (RemoteTable) UnicastRemoteObject.exportObject(table, 0);
-
-            Registry registry = LocateRegistry.getRegistry(serverIp, 1099);
+            registry = LocateRegistry.getRegistry(serverIp, 1099);
 
             int id = registry.list().length;
             registry.bind("table" + id, stubTable);
 
             System.out.println("table " + id + " ready.");
 
-        } catch (RemoteException ex) {
-            Logger.getLogger(MainClient.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (AlreadyBoundException ex) {
+        } catch (RemoteException | AlreadyBoundException ex) {
             Logger.getLogger(MainClient.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

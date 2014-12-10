@@ -7,13 +7,21 @@
 
 package vss.rmi.diningphilos.client;
 
+import java.rmi.AccessException;
+import java.rmi.AlreadyBoundException;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.Arrays;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteMaster;
+import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteTable;
 import vss.rmi.diningphilos.server.n.remote.objects.Master;
+import vss.rmi.diningphilos.server.n.remote.objects.Philosopher;
 
 /**
  *
@@ -49,20 +57,89 @@ public class MainServer {
         System.out.println("Number Seats:");
         final int nSeats = in.nextInt();
 
+        // dynamic number of clients/tableparts?
+        System.out.println("Number TableParts:");
+        final int nTableParts = in.nextInt();
+
         try {
 
             // initiate registry
             LocateRegistry.createRegistry(1099);
             Registry registry = LocateRegistry.getRegistry();
 
-            // start master
+            // initiate and bind master
             Master master = new Master(nPhilosophers);
-            master.initiate(registry);
+            RemoteMaster stubMaster = (RemoteMaster) UnicastRemoteObject.exportObject(master, 0);
+            registry.bind("master", stubMaster);
+
+            // loop: wait for clients
+            System.out.println("Waiting for enough clients...");
+            // TODO: length volatile ?
+
+            // !! length von tables
+            while (registry.list().length-1 < nTableParts) {
+            }
+
+            System.out.println("Connected.");
+
+            // communication with clients --> tables
+
+            RemoteTable[] remoteTables = new RemoteTable[nTableParts];
+
+            // TODO: gleichmäßige verteilung
+            int seatsPerStub = nSeats / nTableParts;
+            // TODO: lastenabhängige verteilung
+            // int cores = stubTable.getCoreCount();
+            int philosPerStub = nPhilosophers / nTableParts;
+
+            // get remote tables
+            int i = 1;
+            int j = 0;
+            for (RemoteTable stubTable : remoteTables) {
+                stubTable = (RemoteTable) registry.lookup("table" + i++);
+                System.out.println("table " + i + " found.");
+
+                stubTable.init(seatsPerStub);
+
+                // create and introduce philos
+                for (; j < philosPerStub; j++) {
+                    if (Arrays.asList(hungry).contains(j+"")) {
+                        stubTable.addPhilosopher(j, "id " + j, true);
+                        System.out.println("id " + j + " stomach seems to growl faster.");
+                    } else {
+                        stubTable.addPhilosopher(j, "id " + j, false);
+                    }
+                }
+            }
+
+            // --------------------------------------
+
+            System.out.println("master enters room.");
+
+            // create table
+            System.out.println("table opens.");
+
+            // start philosophers
+            for (final Philosopher cur : master.getPhilosophers()) {
+                cur.setDaemon(true);
+                cur.start();
+            }
+
+            // start master
             master.start();
-            
-        } catch (RemoteException ex) {
+
+            // run time
+            Thread.sleep(60000);
+
+            System.out.println("table closes.");
+            // stop all
+            for (final Philosopher cur : master.getPhilosophers()) {
+                cur.interrupt();
+            }
+            master.interrupt();
+
+        } catch (InterruptedException | NotBoundException | RemoteException | AlreadyBoundException ex) {
             Logger.getLogger(MainServer.class.getName()).log(Level.SEVERE, null, ex);
         }
-
     }
 }
