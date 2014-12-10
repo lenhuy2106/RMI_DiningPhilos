@@ -1,0 +1,149 @@
+/*
+ * (C) Nhu-Huy Le, nle@hm.edu
+ * (C) Mathias Long Yan, myan@hm.edu
+ * Oracle Corporation Java 1.8.0
+ * Microsoft Windows 7 Professional
+ * 6.1.7601 Service Pack 1 Build 7601
+ */
+
+package vss.rmi.diningphilos.server.n.remote.objects;
+
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteTablepart;
+import vss.rmi.diningphilos.server.n.MainClient;
+import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteFork;
+import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteMaster;
+import vss.rmi.diningphilos.server.n.remote.interfaces.RemotePhilosopher;
+import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteSeat;
+
+/**
+ * Tisch Main Klasse.
+ * Ein Tisch ist eine Klasse und erstellt für sich die gleiche Anzahl an
+ * Sitzen und Gabeln. Er kennt auch ihre Reihenfolge, greift aber sonst
+ * nicht mehr auf sie zu.
+ * @author Nhu-Huy Le, Mathias Long Yan
+ */
+public class Tablepart implements RemoteTablepart {
+
+    private RemoteSeat[] ownSeats;
+    private List<RemoteSeat> allSeats;
+    private RemoteFork[] ownForks;
+    private List<RemoteFork> allForks;
+    private RemoteMaster master;
+
+    public Tablepart() {}
+
+    /**
+     * Ctor
+     * @param nOwnSeats Seats number.
+     */
+    public void initLocal(final int nOwnSeats) {
+
+        try {
+            // TODO: synchronized
+            ownSeats = new RemoteSeat[nOwnSeats];
+            ownForks = new RemoteFork[nOwnSeats];
+            master = (RemoteMaster) MainClient.registry.lookup("master");
+
+            for (int i = 0; i < nOwnSeats; i++) {
+
+                Seat seat = new Seat(this);
+
+                RemoteSeat rSeat = (RemoteSeat) UnicastRemoteObject.exportObject(seat, 0);
+                RemoteFork rFork = (RemoteFork) UnicastRemoteObject.exportObject(new Fork(), 0);
+
+                ownSeats[i] = rSeat;
+                ownForks[i] = rFork;
+            }
+            // last fork is remote
+            // forks[nSeats] =
+
+        } catch (RemoteException | NotBoundException ex) {
+            Logger.getLogger(Tablepart.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public void initGlobal() {
+        try {
+            allSeats = Collections.synchronizedList(new ArrayList<>());
+            allForks = Collections.synchronizedList(new ArrayList<>());
+
+            for (RemoteTablepart tablepart : master.getTableparts()) {
+                // add all table seats
+                for (RemoteSeat seat : tablepart.getOwnSeats()) {
+                    allSeats.add(seat);
+                }
+                // add all table forks
+                for (RemoteFork fork : tablepart.getOwnForks()) {
+                    allForks.add(fork);
+                }
+            }
+        } catch (RemoteException ex) {
+            Logger.getLogger(Tablepart.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public RemotePhilosopher addPhilosopher(final int id, final String name, final boolean hungry, final int nSeats) {
+
+        // RemotePhilosopher stubPhilo = null;
+
+        // alredy exported? (remoteMe)
+        Philosopher ph = new Philosopher(name, this, hungry, nSeats);
+
+        return ph;
+    }
+
+    public int getCoreCount() {
+        return Runtime.getRuntime().availableProcessors();
+    }
+
+    public void callOne() throws RemoteException {
+        for (RemotePhilosopher phil : master.getPhilosophers()) {
+            if (phil.getThreadState().equals(Thread.State.WAITING)) {
+                synchronized (phil) {
+                    phil.notify();
+                }
+                break;
+            }
+        }
+    }
+
+    /**
+     * Getter
+     * @return Array of seats.
+     */
+    public RemoteSeat[] getOwnSeats() {
+        return ownSeats;
+    }
+
+    /**
+     * Getter
+     * @return Array of forks.
+     */
+    public RemoteFork[] getOwnForks() {
+        return ownForks;
+    }
+
+    public RemoteMaster getMaster() {
+        return master;
+    }
+
+    public void setMaster(RemoteMaster master) {
+        this.master = master;
+    }
+
+    public List<RemoteSeat> getAllSeats() {
+        return allSeats;
+    }
+
+    public List<RemoteFork> getAllForks() {
+        return allForks;
+    }
+}
