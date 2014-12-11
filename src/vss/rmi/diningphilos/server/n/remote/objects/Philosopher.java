@@ -100,10 +100,8 @@ public class Philosopher extends Thread implements RemotePhilosopher {
 
             return free;
         } catch (RemoteException ex) {
-            // TODO: ausfallsicherung
-            System.out.println("Tablepart " + curTablePart + " crashed.");
-            // wait();
-
+            // ex.printStackTrace();
+            threadWait();
             return lookForSeat();
         }
     }
@@ -171,7 +169,9 @@ public class Philosopher extends Thread implements RemotePhilosopher {
             meals++;
 
         } catch (RemoteException ex) {
-            Logger.getLogger(Philosopher.class.getName()).log(Level.SEVERE, null, ex);
+            threadWait();
+            // TODO: alright?
+            eat();
         }
     }
 
@@ -193,6 +193,18 @@ public class Philosopher extends Thread implements RemotePhilosopher {
 
     public synchronized void threadNotify() {
         this.notify();
+    }
+
+
+    private void threadWait() {
+        try {
+            synchronized (this) {
+                System.out.println(name + " is waiting for crash handling.");
+                this.wait();
+            }
+        } catch (InterruptedException ix) {
+            threadWait();
+        }
     }
 
     /**
@@ -250,5 +262,9 @@ public class Philosopher extends Thread implements RemotePhilosopher {
      */
     public void ban() {
         banned = true;
+    }
+
+    public void reportCrash() {
+        // decapitated
     }
 }

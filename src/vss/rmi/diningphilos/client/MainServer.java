@@ -62,10 +62,10 @@ public class MainServer {
 */
         // TODO: master control
 
-        int nPhilosophers = 2;
+        int nPhilosophers = 4;
         String[] hungry = {"0"};
-        int nSeats = 2;
-        int nTableparts = 1;
+        int nSeats = 4;
+        int nTableparts = 2;
 
 
         try {
@@ -120,11 +120,11 @@ public class MainServer {
                     if (Arrays.asList(hungry).contains(j+"")) {
 
                         // !!
-                        master.addPhilosopher(tablepart.createPhilosopher(j, "id " + j, true));
-                        System.out.println("Philosoph [id " + j + "] enters room. He's hungry.");
+                        master.addPhilosopherOnTop(tablepart.createPhilosopher(j, "id " + j, true));
+                        System.out.println("Philosopher [id " + j + "] enters room. He's hungry.");
                     } else {
-                        master.addPhilosopher(tablepart.createPhilosopher(j, "id " + j, false));
-                        System.out.println("Philosoph [id " + j + "] enters room.");
+                        master.addPhilosopherOnTop(tablepart.createPhilosopher(j, "id " + j, false));
+                        System.out.println("Philosopher [id " + j + "] enters room.");
                     }
                 }
             }
