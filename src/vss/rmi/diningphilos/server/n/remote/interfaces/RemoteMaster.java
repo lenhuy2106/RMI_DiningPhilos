@@ -9,15 +9,16 @@ package vss.rmi.diningphilos.server.n.remote.interfaces;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.List;
 
 /**
  *
  * @author T500
  */
 public interface RemoteMaster extends Remote {
-    RemotePhilosopher[] getPhilosophers() throws RemoteException;
+    List<RemotePhilosopher> getPhilosophers() throws RemoteException;
     RemoteTablepart[] getTableparts() throws RemoteException;
-    boolean addPhilosopher(final int id, RemotePhilosopher ph) throws RemoteException;
+    int addPhilosopher(RemotePhilosopher ph) throws RemoteException;
     boolean addTablepart(final int id, RemoteTablepart rt) throws RemoteException;
     // TODO: recoverTable()
 }

@@ -43,8 +43,6 @@ public class Philosopher extends Thread implements RemotePhilosopher {
     /** Currently banned or not. */
     private boolean banned;
 
-    private final int nAllSeats;
-
     private RemotePhilosopher remoteThis = null;
 
     /**
@@ -53,10 +51,9 @@ public class Philosopher extends Thread implements RemotePhilosopher {
      * @param tablePart Table of the Philosopher.
      * @param hungry Hungry or not.
      */
-    public Philosopher(final String name, final RemoteTablepart tablePart, final boolean hungry, final int nSeats) {
+    public Philosopher(final String name, final RemoteTablepart tablePart, final boolean hungry) {
         this.name = name;
         this.tablepart = tablePart;
-        this.nAllSeats = nSeats;
         this.hungry = hungry;
         meals = 0;
         banned = false;
@@ -141,10 +138,13 @@ public class Philosopher extends Thread implements RemotePhilosopher {
                 }
             }
 
+            int nAllSeats = tablepart.getAllSeats().size();
+            // System.out.println(nAllSeats);
+
             final int left = (i) % nAllSeats;
             final int right = (i + 1) % nAllSeats;
 
-            System.out.printf("%-45s %s %n", name, "needs forks.");
+            System.out.printf("%-45s %s %n", name, "needs forks " + left + " " + right + ".");
 
             //waiting for fork
             while (true) {
@@ -193,10 +193,13 @@ public class Philosopher extends Thread implements RemotePhilosopher {
         this.interrupt();
     }
 
+    public void threadNotify() {
+        this.notify();
+    }
+
     /**
      * Starts thread.
      */
-    @Override
     public void run() {
 
         int mealsLeft = 3;

@@ -86,7 +86,7 @@ public class Tablepart implements RemoteTablepart {
     }
 
     public void initGlobal() {
-        
+
         try {
             allSeats = Collections.synchronizedList(new ArrayList<>());
             allForks = Collections.synchronizedList(new ArrayList<>());
@@ -106,14 +106,24 @@ public class Tablepart implements RemoteTablepart {
         }
     }
 
-    public RemotePhilosopher createPhilosopher(final int id, final String name, final boolean hungry, final int nSeats) {
+    public RemotePhilosopher createPhilosopher(final int id, final String name, final boolean hungry) {
 
-        // RemotePhilosopher stubPhilo = null;
+        // philosopher can walk
+        return new Philosopher(name, remoteThis, hungry);
+    }
 
-        // alredy exported? (remoteMe)
-        Philosopher ph = new Philosopher(name, remoteThis, hungry, nSeats);
+    public RemoteSeat createSeat() {
 
-        return ph;
+        Seat seat = new Seat(this);
+        ownSeats.add(seat);
+        return seat;
+    }
+
+    public RemoteFork createFork() {
+
+        Fork fork = new Fork();
+        ownForks.add(fork);
+        return fork;
     }
 
     public int getCoreCount() {

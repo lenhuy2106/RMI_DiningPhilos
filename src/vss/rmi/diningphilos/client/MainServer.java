@@ -60,6 +60,7 @@ public class MainServer {
         System.out.println("Number TableParts:");
         final int nTableParts = in.nextInt();
 */
+        // TODO: master control
 
         int nPhilosophers = 2;
         String[] hungry = {"0"};
@@ -75,12 +76,12 @@ public class MainServer {
 
             // initiate and bind master
             // TODO: server: try to use localmaster
-            Master localMaster = new Master(nPhilosophers, nTableparts);
+            Master localMaster = new Master(nPhilosophers, nTableparts, nSeats);
             RemoteMaster master = (RemoteMaster) UnicastRemoteObject.exportObject(localMaster, 0);
             registry.bind("master", master);
 
             // loop: wait for clients
-            System.out.println("Waiting for enough clients...");
+            System.out.println("Waiting for " + nTableparts +" clients...");
             // TODO: length volatile ?
 
             // !! length von tables
@@ -103,8 +104,8 @@ public class MainServer {
 
                 // master knows all table parts
                 RemoteTablepart tablepart = (RemoteTablepart) registry.lookup("table" + i);
-                System.out.println("----- Tablepart " + i + " found:");
-                System.out.println("It has " + seatsPerStub
+                System.out.print("----- Tablepart " + i + " found -");
+                System.out.println(" has " + seatsPerStub
                                     + " seats and "
                                     + philosPerStub
                                     + " philosophers.");
@@ -119,10 +120,10 @@ public class MainServer {
                     if (Arrays.asList(hungry).contains(j+"")) {
 
                         // !!
-                        master.addPhilosopher(j, tablepart.createPhilosopher(j, "id " + j, true, nSeats));
+                        master.addPhilosopher(tablepart.createPhilosopher(j, "id " + j, true));
                         System.out.println("Philosoph [id " + j + "] enters room. He's hungry.");
                     } else {
-                        master.addPhilosopher(j, tablepart.createPhilosopher(j, "id " + j, false, nSeats));
+                        master.addPhilosopher(tablepart.createPhilosopher(j, "id " + j, false));
                         System.out.println("Philosoph [id " + j + "] enters room.");
                     }
                 }
@@ -149,17 +150,27 @@ public class MainServer {
             // start master
             localMaster.start();
 
-            // run time
-            Thread.sleep(60000);
+            // run time thread
+            new Thread(() -> {
+                try {
+                    Thread.sleep(60000);
 
-            System.out.println("table closes.");
-            // stop all
-            for (final RemotePhilosopher cur : master.getPhilosophers()) {
-                cur.threadInterrupt();
-            }
-            localMaster.interrupt();
+                    System.out.println("table closes.");
+                    // stop all
+                    for (final RemotePhilosopher cur : master.getPhilosophers()) {
+                        cur.threadInterrupt();
+                    }
+                    localMaster.interrupt();
+                } catch (InterruptedException | RemoteException ex) {
+                    Logger.getLogger(MainServer.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }).start();
 
-        } catch (InterruptedException | NotBoundException | RemoteException | AlreadyBoundException ex) {
+            // start UI
+            // localMaster.openUI();
+
+
+        } catch (NotBoundException | RemoteException | AlreadyBoundException ex) {
             Logger.getLogger(MainServer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

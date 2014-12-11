@@ -9,8 +9,14 @@
 package vss.rmi.diningphilos.server.n.remote.objects;
 
 import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteFork;
 import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteMaster;
 import vss.rmi.diningphilos.server.n.remote.interfaces.RemotePhilosopher;
+import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteSeat;
 import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteTablepart;
 
 /**
@@ -25,17 +31,21 @@ import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteTablepart;
 public class Master extends Thread implements RemoteMaster {
 
     /** Array of all philosophers. */
-    private final RemotePhilosopher[] philosophers;
+    private final List<RemotePhilosopher> philosophers;
     private final RemoteTablepart[] tableparts;
+    private int nPhilosophers;
+    private int nSeats;
 
     /**
      * Ctor.
      * @param nPhilosophers Number of philosophers.
      * @param nTableparts
      */
-    public Master(final int nPhilosophers, final int nTableparts) {
-        philosophers = new RemotePhilosopher[nPhilosophers];
+    public Master(final int nPhilosophers, final int nTableparts, final int nSeats) {
+        philosophers = new ArrayList<>(nPhilosophers);
         tableparts = new RemoteTablepart[nTableparts];
+        this.nSeats = nSeats;
+        this.nPhilosophers = nPhilosophers;
     }
 
     /**
@@ -45,10 +55,10 @@ public class Master extends Thread implements RemoteMaster {
         try {
 
             while (!isInterrupted()) {
-                RemotePhilosopher min = philosophers[0];
-                RemotePhilosopher max = philosophers[0];
+                RemotePhilosopher min = philosophers.get(0);
+                RemotePhilosopher max = philosophers.get(0);
 
-                if (philosophers[philosophers.length-1] != null) {
+                if (philosophers.get(philosophers.size()-1) != null) {
                     for (final RemotePhilosopher cur : philosophers) {
                         if (cur.getMeals() < min.getMeals()) {
                             min = cur;
@@ -83,7 +93,7 @@ public class Master extends Thread implements RemoteMaster {
      * Getter.
      * @return Philosophers array.
      */
-    public RemotePhilosopher[] getPhilosophers() {
+    public List<RemotePhilosopher> getPhilosophers() {
         return philosophers;
     }
 
@@ -95,8 +105,8 @@ public class Master extends Thread implements RemoteMaster {
         return tableparts;
     }
 
-
     public boolean addTablepart(final int id, RemoteTablepart rtp) {
+
         if (id <= tableparts.length) {
             tableparts[id] = rtp;
             return true;
@@ -105,12 +115,38 @@ public class Master extends Thread implements RemoteMaster {
         }
     }
 
-    public boolean addPhilosopher(final int id, RemotePhilosopher rph) {
-        if (id <= philosophers.length) {
-            philosophers[id] = rph;
-            return true;
-        } else {
-            return false;
+    public int addPhilosopher(RemotePhilosopher rph) {
+
+            philosophers.add(rph);
+            return philosophers.size();
+    }
+
+    public void openUI() {
+
+        // hardcoded TODO: UI
+        for (int i = 0; i < tableparts.length; i++) {
+            try {
+
+                // add philosopher
+                nPhilosophers++;
+                RemotePhilosopher philo = tableparts[i].createPhilosopher(nPhilosophers,
+                                                                "id " + nPhilosophers,
+                                                                true);
+                addPhilosopher(philo);
+
+                // add seat, fork
+                nSeats++;
+                RemoteSeat seat = tableparts[i].createSeat();
+                RemoteFork fork = tableparts[i].createFork();
+
+                for (RemoteTablepart tablepart : tableparts) {
+                    tablepart.getAllSeats().add(seat);
+                    tablepart.getAllForks().add(fork);
+                }
+
+            } catch (RemoteException ex) {
+                Logger.getLogger(Master.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
 

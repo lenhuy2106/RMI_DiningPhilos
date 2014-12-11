@@ -26,10 +26,10 @@ public class Seat implements RemoteSeat {
     private RemotePhilosopher holder;
     /** Free or not free. */
     private boolean free = true;
-    private final Tablepart table;
+    private final Tablepart tablepart;
 
     public Seat(final Tablepart table) {
-        this.table = table;
+        this.tablepart = table;
     }
 
     /**
@@ -54,6 +54,6 @@ public class Seat implements RemoteSeat {
     public void leave() throws RemoteException {
         holder = null;
         free = true;
-        table.callOne();
+        tablepart.callOne();
     }
 }

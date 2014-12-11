@@ -18,7 +18,9 @@ import java.util.List;
 public interface RemoteTablepart extends Remote {
     void initLocal(final int nSeats) throws RemoteException;
     void initGlobal() throws RemoteException;
-    RemotePhilosopher createPhilosopher(final int id, final String name, final boolean hungry, final int nSeats) throws RemoteException;;
+    RemotePhilosopher createPhilosopher(final int id, final String name, final boolean hungry) throws RemoteException;;
+    RemoteSeat createSeat() throws RemoteException;
+    RemoteFork createFork() throws RemoteException;
     int getCoreCount() throws RemoteException;
     void callOne() throws RemoteException;
     List<RemoteSeat> getOwnSeats() throws RemoteException;
