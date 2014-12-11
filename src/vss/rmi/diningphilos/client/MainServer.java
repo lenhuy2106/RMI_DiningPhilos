@@ -74,9 +74,10 @@ public class MainServer {
             Registry registry = LocateRegistry.getRegistry();
 
             // initiate and bind master
-            Master master = new Master(nPhilosophers, nTableparts);
-            RemoteMaster stubMaster = (RemoteMaster) UnicastRemoteObject.exportObject(master, 0);
-            registry.bind("master", stubMaster);
+            // TODO: server: try to use localmaster
+            Master localMaster = new Master(nPhilosophers, nTableparts);
+            RemoteMaster master = (RemoteMaster) UnicastRemoteObject.exportObject(localMaster, 0);
+            registry.bind("master", master);
 
             // loop: wait for clients
             System.out.println("Waiting for enough clients...");
@@ -106,18 +107,17 @@ public class MainServer {
 
                 // !! init local
                 tablepart.initLocal(seatsPerStub);
-                master.getTableparts()[i] = tablepart;
-
+                master.addTablepart(i, tablepart);
 
                 // create and introduce philos
                 for (; j < philosPerStub; j++) {
                     if (Arrays.asList(hungry).contains(j+"")) {
 
                         // !!
-                        master.getPhilosophers()[j] = tablepart.addPhilosopher(j, "id " + j, true, nSeats);
+                        master.addPhilosopher(j, tablepart.createPhilosopher(j, "id " + j, true, nSeats));
                         System.out.println("id " + j + " stomach seems to growl faster.");
                     } else {
-                        master.getPhilosophers()[j] = tablepart.addPhilosopher(j, "id " + j, false, nSeats);
+                        master.addPhilosopher(j, tablepart.createPhilosopher(j, "id " + j, false, nSeats));
                     }
                 }
             }
@@ -136,13 +136,12 @@ public class MainServer {
 
             // start philosophers
             for (final RemotePhilosopher cur : master.getPhilosophers()) {
-                System.out.println("found");
                 cur.setThreadDaemon(true);
                 cur.threadStart();
             }
 
             // start master
-            master.start();
+            localMaster.start();
 
             // run time
             Thread.sleep(60000);
@@ -152,7 +151,7 @@ public class MainServer {
             for (final RemotePhilosopher cur : master.getPhilosophers()) {
                 cur.threadInterrupt();
             }
-            master.interrupt();
+            localMaster.interrupt();
 
         } catch (InterruptedException | NotBoundException | RemoteException | AlreadyBoundException ex) {
             Logger.getLogger(MainServer.class.getName()).log(Level.SEVERE, null, ex);

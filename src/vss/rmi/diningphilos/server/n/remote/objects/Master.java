@@ -95,6 +95,15 @@ public class Master extends Thread implements RemoteMaster {
     }
 
 
+    public boolean addTablepart(final int id, RemoteTablepart rtp) {
+        if (id <= tableparts.length) {
+            tableparts[id] = rtp;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     public boolean addPhilosopher(final int id, RemotePhilosopher rph) {
         if (id <= philosophers.length) {
             philosophers[id] = rph;

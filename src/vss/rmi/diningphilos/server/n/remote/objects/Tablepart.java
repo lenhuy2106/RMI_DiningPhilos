@@ -8,6 +8,8 @@
 
 package vss.rmi.diningphilos.server.n.remote.objects;
 
+import java.rmi.AccessException;
+import java.rmi.AlreadyBoundException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
@@ -32,13 +34,26 @@ import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteSeat;
  */
 public class Tablepart implements RemoteTablepart {
 
-    private RemoteSeat[] ownSeats;
+    private List<RemoteSeat> ownSeats;
     private List<RemoteSeat> allSeats;
-    private RemoteFork[] ownForks;
+    private List<RemoteFork> ownForks;
     private List<RemoteFork> allForks;
     private RemoteMaster master;
+    private RemoteTablepart remoteThis;
 
-    public Tablepart() {}
+    public Tablepart() {
+
+        try {
+            int id = MainClient.registry.list().length-1; // minus master
+            remoteThis = (RemoteTablepart) UnicastRemoteObject.exportObject(this, 0);
+
+            MainClient.registry.bind("table" + id, remoteThis);
+            System.out.println("table " + id + " ready.");
+            
+        } catch (RemoteException | AlreadyBoundException ex) {
+            Logger.getLogger(Tablepart.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 
     /**
      * Ctor
@@ -48,8 +63,8 @@ public class Tablepart implements RemoteTablepart {
 
         try {
             // TODO: synchronized
-            ownSeats = new RemoteSeat[nOwnSeats];
-            ownForks = new RemoteFork[nOwnSeats];
+            ownSeats = Collections.synchronizedList(new ArrayList<>());
+            ownForks = Collections.synchronizedList(new ArrayList<>());
             master = (RemoteMaster) MainClient.registry.lookup("master");
 
             for (int i = 0; i < nOwnSeats; i++) {
@@ -59,8 +74,8 @@ public class Tablepart implements RemoteTablepart {
                 RemoteSeat rSeat = (RemoteSeat) UnicastRemoteObject.exportObject(seat, 0);
                 RemoteFork rFork = (RemoteFork) UnicastRemoteObject.exportObject(new Fork(), 0);
 
-                ownSeats[i] = rSeat;
-                ownForks[i] = rFork;
+                ownSeats.add(i, rSeat);
+                ownForks.add(i, rFork);
             }
             // last fork is remote
             // forks[nSeats] =
@@ -77,6 +92,8 @@ public class Tablepart implements RemoteTablepart {
 
             for (RemoteTablepart tablepart : master.getTableparts()) {
                 // add all table seats
+                tablepart.getOwnSeats().get(0).sit(null);
+
                 for (RemoteSeat seat : tablepart.getOwnSeats()) {
                     allSeats.add(seat);
                 }
@@ -90,12 +107,12 @@ public class Tablepart implements RemoteTablepart {
         }
     }
 
-    public RemotePhilosopher addPhilosopher(final int id, final String name, final boolean hungry, final int nSeats) {
+    public RemotePhilosopher createPhilosopher(final int id, final String name, final boolean hungry, final int nSeats) {
 
         // RemotePhilosopher stubPhilo = null;
 
         // alredy exported? (remoteMe)
-        Philosopher ph = new Philosopher(name, this, hungry, nSeats);
+        Philosopher ph = new Philosopher(name, remoteThis, hungry, nSeats);
 
         return ph;
     }
@@ -119,7 +136,7 @@ public class Tablepart implements RemoteTablepart {
      * Getter
      * @return Array of seats.
      */
-    public RemoteSeat[] getOwnSeats() {
+    public List<RemoteSeat> getOwnSeats() {
         return ownSeats;
     }
 
@@ -127,7 +144,7 @@ public class Tablepart implements RemoteTablepart {
      * Getter
      * @return Array of forks.
      */
-    public RemoteFork[] getOwnForks() {
+    public List<RemoteFork> getOwnForks() {
         return ownForks;
     }
 
