@@ -71,11 +71,8 @@ public class Tablepart implements RemoteTablepart {
 
             for (int i = 0; i < nOwnSeats; i++) {
 
-                RemoteSeat rSeat = (RemoteSeat) UnicastRemoteObject.exportObject(new Seat(this), 0);
-                RemoteFork rFork = (RemoteFork) UnicastRemoteObject.exportObject(new Fork(), 0);
-
-                ownSeats.add(i, rSeat);
-                ownForks.add(i, rFork);
+                ownSeats.add(i, new Seat(remoteThis));
+                ownForks.add(i, new Fork());
             }
             // last fork is remote
             // forks[nSeats] =
@@ -109,20 +106,20 @@ public class Tablepart implements RemoteTablepart {
 
     }
 
-    public RemotePhilosopher createPhilosopher(final int id, final String name, final boolean hungry) {
+    public RemotePhilosopher createPhilosopher(final int id, final String name, final boolean hungry) throws RemoteException {
 
         // philosopher can walk
         return new Philosopher(name, remoteThis, hungry);
     }
 
-    public RemoteSeat createSeat() {
+    public RemoteSeat createSeat() throws RemoteException {
 
-        Seat seat = new Seat(this);
+        Seat seat = new Seat(remoteThis);
         ownSeats.add(seat);
         return seat;
     }
 
-    public RemoteFork createFork() {
+    public RemoteFork createFork() throws RemoteException {
 
         Fork fork = new Fork();
         ownForks.add(fork);
@@ -139,7 +136,7 @@ public class Tablepart implements RemoteTablepart {
         for (RemotePhilosopher phil : master.getPhilosophers()) {
             if (phil.getThreadState().equals(Thread.State.WAITING)) {
 
-                phil.threadNotify();
+                phil.threadNotifyOrStart();
                 break;
             }
         }

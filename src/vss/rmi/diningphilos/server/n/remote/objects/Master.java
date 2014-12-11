@@ -70,7 +70,7 @@ public class Master extends Thread implements RemoteMaster {
                 if (philosophers.get(philosophers.size()-1) != null) {
 
                     for (final RemotePhilosopher cur : philosophers) {
-                        
+
                         if (cur.getMeals() < min.getMeals()) {
                             min = cur;
                         } else if (cur.getMeals() > max.getMeals()) {
@@ -161,8 +161,10 @@ public class Master extends Thread implements RemoteMaster {
         }
     }
 
-    // TODO: faire verteilung
     public void handleCrash(int i) {
+        // TODO: faire verteilung
+
+        System.out.println("------ Start crash handling:");
 
         int idTablepart = 0;
 
@@ -175,73 +177,103 @@ public class Master extends Thread implements RemoteMaster {
         }
 
         catch (RemoteException ex1) {
+            // TODO: counter resets
             System.out.println("Tablepart " + idTablepart + " crashed.");
 
-            tableparts.remove(i);
+            tableparts.remove(idTablepart);
             recoverPhilosophers();
             recoverSeatsAndForks();
+
+            System.out.println("\nRecovery successful: Restarting Now!");
+            initAll();
+
+            for (RemotePhilosopher rp : philosophers) {
+                try {
+                    rp.threadNotifyOrStart();
+                } catch (RemoteException ex) {
+                    handleCrash(0);
+                    break;
+                }
+            }
+
+            // restart master control
             run();
         }
     }
 
     private void recoverPhilosophers() {
 
+        System.out.print("Recover Philosophers...");
+
         int idPhilo = 0;
 
+        for (RemotePhilosopher rph : philosophers) {
         // find crashed philosopher
-        try {
-            for (RemotePhilosopher rph : philosophers) {
-                rph.getPhilName();
-                idPhilo++;
-            }
+            try {
+                System.out.print("[" + rph.getPhilName() + "]");
+                rph.threadInterrupt();
 
-        } catch (RemoteException ex) {
+            } catch (RemoteException ex) {
 
-            for (RemoteTablepart rtp : tableparts) {
-                try {
-                    // TODO: was he hungry?
-                    rtp.createPhilosopher(idPhilo, "id " + idPhilo, true);
-                    break; // all on first tablepart ...
+                // find subclient TODO: not all on first tablepart ...
+                for (RemoteTablepart rtp : tableparts) {
+                    try {
+                        // TODO: was he hungry?
 
-                // recovery client crashed
-                } catch (RemoteException ex1) {
-                    handleCrash(0);
-                    break;
+                        RemotePhilosopher rp = rtp.createPhilosopher(idPhilo, "id " + idPhilo, true);
+                        philosophers.set(idPhilo, rp);
+                        System.out.print("[id " + idPhilo + " -> " + rtp.getId() + "]");
+                    // recovery client crashed
+                    } catch (RemoteException ex1) {
+                        handleCrash(0);
+                        break;
+                    }
                 }
             }
+            idPhilo++;
         }
     }
 
     private void recoverSeatsAndForks() {
 
+        System.out.print("\nRecover Seats/Forks...");
+
+
         int idSeat = 0;
 
-        // find crashed philosopher
-        try {
-            for (RemoteSeat rst : allSeats) {
+        for (RemoteSeat rst : allSeats) {
+
+            // find crashed philosopher
+            try {
+                System.out.print("[" + idSeat + "]");
+
                 rst.leave();
                 allForks.get(idSeat).drop();
-                idSeat++;
-            }
 
-        } catch (RemoteException ex) {
+            } catch (RemoteException ex) {
 
-            for (RemoteTablepart rtp : tableparts) {
-                try {
-                    allSeats.add(rtp.createSeat());
-                    allForks.add(rtp.createFork());
-                    break; // all on first tablepart ...
+                // find subclient TODO: not all on first tablepart ...
+                for (RemoteTablepart rtp : tableparts) {
 
-                // recovery client crashed
-                } catch (RemoteException ex1) {
-                    handleCrash(0);
-                    break;
+                    try {
+                        allSeats.set(idSeat, rtp.createSeat());
+                        allForks.set(idSeat, rtp.createFork());
+                        System.out.print("[" + idSeat + " -> " + rtp.getId() + "]");
+
+                    // recovery client crashed
+                    } catch (RemoteException ex1) {
+                        ex1.printStackTrace();
+                        //handleCrash(0);
+                        //break; // TODO: break or recursive?
+                    }
                 }
             }
+            idSeat++;
         }
     }
 
     private void initAll() {
+
         for (RemoteTablepart tablepart : tableparts) {
             try {
                 // reload all refs (secure)

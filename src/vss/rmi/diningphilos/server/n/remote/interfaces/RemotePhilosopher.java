@@ -21,7 +21,7 @@ public interface RemotePhilosopher extends Remote {
     void setThreadDaemon(final boolean flag) throws RemoteException;
     void threadStart() throws RemoteException;
     void threadInterrupt() throws RemoteException;
-    void threadNotify() throws RemoteException;
+    void threadNotifyOrStart() throws RemoteException;
     void eat()throws InterruptedException, RemoteException;
     void run() throws RemoteException;
     String getPhilName() throws RemoteException;

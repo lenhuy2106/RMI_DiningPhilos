@@ -72,7 +72,6 @@ public class MainServer {
 
 
         try {
-
             // initiate registry
             LocateRegistry.createRegistry(1099);
             Registry registry = LocateRegistry.getRegistry();
@@ -159,7 +158,7 @@ public class MainServer {
             System.out.println("master enters room.");
             System.out.println("- There are "
                                 + master.getAllSeats().size()
-                                + " seats and forks overall.");
+                                + " seats/forks overall.");
 
             // create table
             System.out.println("table opens.");
@@ -192,7 +191,7 @@ public class MainServer {
             // start UI
             // localMaster.openUI();
 
-
+            
         } catch (NotBoundException | RemoteException | AlreadyBoundException ex) {
             Logger.getLogger(MainServer.class.getName()).log(Level.SEVERE, null, ex);
         }

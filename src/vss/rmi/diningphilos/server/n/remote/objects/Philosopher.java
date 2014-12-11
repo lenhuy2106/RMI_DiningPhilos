@@ -51,7 +51,7 @@ public class Philosopher extends Thread implements RemotePhilosopher {
      * @param tablePart Table of the Philosopher.
      * @param hungry Hungry or not.
      */
-    public Philosopher(final String name, final RemoteTablepart tablePart, final boolean hungry) {
+    public Philosopher(final String name, final RemoteTablepart tablePart, final boolean hungry) throws RemoteException {
         this.name = name;
         this.tablepart = tablePart;
         this.hungry = hungry;
@@ -59,11 +59,7 @@ public class Philosopher extends Thread implements RemotePhilosopher {
         banned = false;
 
         // remote itself
-        try {
-            remoteThis = (RemotePhilosopher) UnicastRemoteObject.exportObject(this, 0);
-        } catch (RemoteException ex) {
-            Logger.getLogger(Philosopher.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        remoteThis = (RemotePhilosopher) UnicastRemoteObject.exportObject(this, 0);
     }
 
     public int lookForSeat() {
@@ -191,8 +187,16 @@ public class Philosopher extends Thread implements RemotePhilosopher {
         this.interrupt();
     }
 
-    public synchronized void threadNotify() {
-        this.notify();
+    public synchronized void threadNotifyOrStart() {
+
+        // runnable / new
+        if (this.getState() == State.WAITING) {
+            this.notify();
+        } else {
+
+        // TODO: cant start thread - illegal state exc
+        //    this.start();
+        }
     }
 
     private void threadWait() {

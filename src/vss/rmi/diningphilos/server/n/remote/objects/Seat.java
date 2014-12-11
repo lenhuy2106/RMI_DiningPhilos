@@ -9,8 +9,10 @@
 package vss.rmi.diningphilos.server.n.remote.objects;
 
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 import vss.rmi.diningphilos.server.n.remote.interfaces.RemotePhilosopher;
 import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteSeat;
+import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteTablepart;
 
 /**
  *Ein Platz ist eine gemeinsam genutzte Klasse.
@@ -26,10 +28,12 @@ public class Seat implements RemoteSeat {
     private RemotePhilosopher holder;
     /** Free or not free. */
     private boolean free = true;
-    private final Tablepart tablepart;
+    private final RemoteTablepart tablepart;
+    private final RemoteSeat remoteThis;
 
-    public Seat(final Tablepart table) {
-        this.tablepart = table;
+    public Seat(final RemoteTablepart tablepart) throws RemoteException {
+        this.tablepart = tablepart;
+        remoteThis = (RemoteSeat) UnicastRemoteObject.exportObject(this, 0);
     }
 
     /**

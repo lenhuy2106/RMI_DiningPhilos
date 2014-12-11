@@ -8,8 +8,11 @@
 
 package vss.rmi.diningphilos.server.n.remote.objects;
 
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteFork;
 import vss.rmi.diningphilos.server.n.remote.interfaces.RemotePhilosopher;
+import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteSeat;
 
 /**
  * Eine Gabel ist eine gemeinsam genutzte Klasse.
@@ -25,6 +28,12 @@ public class Fork implements RemoteFork {
     private RemotePhilosopher holder;
     /** Free or not free. */
     private boolean free = true;
+
+    private final RemoteFork remoteThis;
+
+    public Fork() throws RemoteException {
+        remoteThis = (RemoteFork) UnicastRemoteObject.exportObject(this, 0);
+    }
 
     /**
      * Picks fork.
