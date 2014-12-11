@@ -69,39 +69,48 @@ public class Philosopher extends Thread implements RemotePhilosopher {
         }
     }
 
-    public int lookForSeat() throws RemoteException {
+    public int lookForSeat() {
 
-        int free = -1;
-        int cur = -1;
-        final boolean clockwise = Math.random() < 0.5;
-        int tablePartLength = tablepart.getOwnSeats().size();
+        int curTablePart = 0;
 
-        /* random direction?
-        // TODO: local look needed?
-        for (int i = 0; i < tablePartLength; i++) {
+        try {
+            int free = -1;
+            int cur = -1;
+            final boolean clockwise = Math.random() < 0.5;
+            int tablePartLength = tablepart.getOwnSeats().size();
+
+            /* random direction?
+            // TODO: local look needed?
+            for (int i = 0; i < tablePartLength; i++) {
 
             cur = clockwise ? i : (tablePartLength-1)-i;
 
             if (tablepart.getOwnSeats()[cur].sit(this)) {
-                free = cur;
-                break;
+            free = cur;
+            break;
             }
-        }
-        */
+            }
+            */
 
-        // remote look
-        if (free == -1) {
-            for (RemoteSeat seat : tablepart.getAllSeats()) {
-                if (seat.sit(remoteThis)) {
+            // remote look TODO: optimize
+            if (free == -1) {
+                for (RemoteSeat seat : tablepart.getAllSeats()) {
+                    if (seat.sit(remoteThis)) {
 
-                    // TODO: id necessary?
-                    free = 0;
-                    break;
+                        free = 0;
+                        break;
+                    }
                 }
             }
-        }
 
-        return free;
+            return free;
+        } catch (RemoteException ex) {
+            // TODO: ausfallsicherung
+            System.out.println("Tablepart " + curTablePart + " crashed.");
+            // wait();
+
+            return lookForSeat();
+        }
     }
 
     /**

@@ -61,10 +61,10 @@ public class MainServer {
         final int nTableParts = in.nextInt();
 */
 
-        int nPhilosophers = 4;
+        int nPhilosophers = 2;
         String[] hungry = {"0"};
-        int nSeats = 4;
-        int nTableparts = 2;
+        int nSeats = 2;
+        int nTableparts = 1;
 
 
         try {

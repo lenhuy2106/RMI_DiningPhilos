@@ -8,7 +8,6 @@
 
 package vss.rmi.diningphilos.server.n.remote.objects;
 
-import java.rmi.AccessException;
 import java.rmi.AlreadyBoundException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -41,10 +40,13 @@ public class Tablepart implements RemoteTablepart {
     private RemoteMaster master;
     private RemoteTablepart remoteThis;
 
+    // TODO: final?
+    private int id;
+
     public Tablepart() {
 
         try {
-            int id = MainClient.registry.list().length-1; // minus master
+            id = MainClient.registry.list().length-1; // minus master
             remoteThis = (RemoteTablepart) UnicastRemoteObject.exportObject(this, 0);
 
             MainClient.registry.bind("table" + id, remoteThis);
@@ -84,21 +86,19 @@ public class Tablepart implements RemoteTablepart {
     }
 
     public void initGlobal() {
+        
         try {
             allSeats = Collections.synchronizedList(new ArrayList<>());
             allForks = Collections.synchronizedList(new ArrayList<>());
 
-            int i = 0;
             for (RemoteTablepart tablepart : master.getTableparts()) {
                 // add all table seats
                 for (RemoteSeat seat : tablepart.getOwnSeats()) {
                     allSeats.add(seat);
-                    System.out.println(allSeats.get(i++));
                 }
                 // add all table forks
                 for (RemoteFork fork : tablepart.getOwnForks()) {
                     allForks.add(fork);
-                    System.out.println(allForks.get(i++));
                 }
             }
         } catch (RemoteException ex) {
@@ -129,6 +129,10 @@ public class Tablepart implements RemoteTablepart {
                 break;
             }
         }
+    }
+
+    public int getId() {
+        return id;
     }
 
     /**

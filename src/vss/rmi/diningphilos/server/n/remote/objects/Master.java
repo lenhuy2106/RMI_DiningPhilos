@@ -74,7 +74,8 @@ public class Master extends Thread implements RemoteMaster {
             System.out.println("master leaves room.");
 
         } catch (RemoteException rm) {
-            rm.printStackTrace();
+            // TODO: ausfallsicherung
+
         }
     }
 
@@ -112,4 +113,6 @@ public class Master extends Thread implements RemoteMaster {
             return false;
         }
     }
+
+    // private void handleCrash
 }
