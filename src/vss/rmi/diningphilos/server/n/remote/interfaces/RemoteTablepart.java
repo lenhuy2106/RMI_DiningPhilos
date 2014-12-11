@@ -16,6 +16,7 @@ import java.util.List;
  * @author T500
  */
 public interface RemoteTablepart extends Remote {
+    int getId() throws RemoteException;
     void initLocal(final int nSeats) throws RemoteException;
     void initGlobal() throws RemoteException;
     RemotePhilosopher createPhilosopher(final int id, final String name, final boolean hungry) throws RemoteException;;

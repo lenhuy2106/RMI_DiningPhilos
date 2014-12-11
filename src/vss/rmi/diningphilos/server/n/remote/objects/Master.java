@@ -10,6 +10,7 @@ package vss.rmi.diningphilos.server.n.remote.objects;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -32,7 +33,10 @@ public class Master extends Thread implements RemoteMaster {
 
     /** Array of all philosophers. */
     private final List<RemotePhilosopher> philosophers;
-    private final RemoteTablepart[] tableparts;
+    private final List<RemoteTablepart> tableparts;
+
+    private final List<RemoteSeat> allSeats;
+    private final List<RemoteFork> allForks;
     private int nPhilosophers;
     private int nSeats;
 
@@ -42,8 +46,12 @@ public class Master extends Thread implements RemoteMaster {
      * @param nTableparts
      */
     public Master(final int nPhilosophers, final int nTableparts, final int nSeats) {
+        // remote: read only lists
+        // TODO: philo iteration concurrent exc?
         philosophers = new ArrayList<>(nPhilosophers);
-        tableparts = new RemoteTablepart[nTableparts];
+        tableparts = new ArrayList<>(nTableparts);
+        allSeats = Collections.synchronizedList(new ArrayList<>());
+        allForks = Collections.synchronizedList(new ArrayList<>());
         this.nSeats = nSeats;
         this.nPhilosophers = nPhilosophers;
     }
@@ -53,8 +61,9 @@ public class Master extends Thread implements RemoteMaster {
      */
     public void run() {
 
-        try {
-            while (!isInterrupted()) {
+        while (!isInterrupted()) {
+
+            try {
                 RemotePhilosopher min = philosophers.get(0);
                 RemotePhilosopher max = philosophers.get(0);
 
@@ -72,7 +81,13 @@ public class Master extends Thread implements RemoteMaster {
                         max.ban();
                     }
                 }
+
+            } catch (RemoteException rm) {
+                handleCrash(0);
             }
+        }
+
+        try {
             System.out.println("master counts: ");
             int total = 0;
 
@@ -83,10 +98,11 @@ public class Master extends Thread implements RemoteMaster {
             System.out.printf("- %d meals in total.%n", total);
             System.out.println("master leaves room.");
 
-        } catch (RemoteException rm) {
-            // TODO: ausfallsicherung
-            handleCrash(0);
+        } catch (RemoteException ex) {
+            Logger.getLogger(Master.class.getName()).log(Level.SEVERE, null, ex);
         }
+
+        System.exit(0);
     }
 
     /**
@@ -101,24 +117,16 @@ public class Master extends Thread implements RemoteMaster {
      * Getter.
      * @return Tableparts array.
      */
-    public RemoteTablepart[] getTableparts() {
+    public List<RemoteTablepart> getTableparts() {
         return tableparts;
     }
 
-    public boolean addTablepart(final int id, RemoteTablepart rtp) {
-
-        if (id <= tableparts.length) {
-            tableparts[id] = rtp;
-            return true;
-        } else {
-            return false;
-        }
+    public List<RemoteSeat> getAllSeats() {
+        return allSeats;
     }
 
-    public int addPhilosopherOnTop(RemotePhilosopher rph) {
-
-            philosophers.add(rph);
-            return philosophers.size();
+    public List<RemoteFork> getAllForks() {
+        return allForks;
     }
 
     public void openUI() {
@@ -127,71 +135,118 @@ public class Master extends Thread implements RemoteMaster {
             // hardcoded TODO: UI
             Thread.sleep(5000);
 
-            for (int i = 0; i < tableparts.length; i++) {
+            for (RemoteTablepart tablepart : tableparts) {
 
                 // add philosopher
                 nPhilosophers++;
-                RemotePhilosopher philo = tableparts[i].createPhilosopher(nPhilosophers,
+                RemotePhilosopher philo = tablepart.createPhilosopher(nPhilosophers,
                                                                 "id " + nPhilosophers,
                                                                 true);
-                addPhilosopherOnTop(philo);
+                philosophers.add(philo);
 
                 // add seat, fork
                 nSeats++;
-                RemoteSeat seat = tableparts[i].createSeat();
-                RemoteFork fork = tableparts[i].createFork();
+                RemoteSeat seat = tablepart.createSeat();
+                RemoteFork fork = tablepart.createFork();
+            }
 
-                for (RemoteTablepart tablepart : tableparts) {
-                    tablepart.getAllSeats().add(seat);
-                    tablepart.getAllForks().add(fork);
-                }
+            for (RemoteTablepart tablepart : tableparts) {
+                // reload all refs (secure)
+                tablepart.initGlobal();
             }
         } catch (RemoteException | InterruptedException ex) {
             Logger.getLogger(Master.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
+    // TODO: faire verteilung
     public void handleCrash(int i) {
 
-        int idPhil = 0;
         int idTablepart = 0;
+
+        // find crashed tablepart
+        try {
+            for (RemoteTablepart rtp : tableparts) {
+                rtp.getId();
+                idTablepart++;
+            }
+        }
+
+        catch (RemoteException ex1) {
+            System.out.println("Tablepart " + idTablepart + " crashed.");
+
+            tableparts.remove(i);
+            recoverPhilosophers();
+            recoverSeatsAndForks();
+            run();
+        }
+    }
+
+    private void recoverPhilosophers() {
+
+        int idPhilo = 0;
 
         // find crashed philosopher
         try {
-            for (RemotePhilosopher rtp : philosophers) {
-                rtp.threadInterrupt();
-                idPhil++;
+            for (RemotePhilosopher rph : philosophers) {
+                rph.getPhilName();
+                idPhilo++;
             }
 
         } catch (RemoteException ex) {
-            System.out.println("Philosopher [id " + idPhil + "] crashed.");
 
-            // find crashed tablepart
-            try {
-                for (RemoteTablepart rtp : tableparts) {
-                    rtp.getOwnSeats();
-                    idTablepart++;
+            for (RemoteTablepart rtp : tableparts) {
+                try {
+                    // TODO: was he hungry?
+                    rtp.createPhilosopher(idPhilo, "id " + idPhilo, true);
+                    break; // all on first tablepart ...
+
+                // recovery client crashed
+                } catch (RemoteException ex1) {
+                    handleCrash(0);
+                    break;
                 }
+            }
+        }
+    }
 
+    private void recoverSeatsAndForks() {
+
+        int idSeat = 0;
+
+        // find crashed philosopher
+        try {
+            for (RemoteSeat rst : allSeats) {
+                rst.leave();
+                allForks.get(idSeat).drop();
+                idSeat++;
             }
 
-            catch (RemoteException ex1) {
-                System.out.println("Tablepart " + idTablepart + " crashed.");
+        } catch (RemoteException ex) {
 
-                // recover all
-                //TODO: transfer crashed [philos, seats, forks] to clients left?
+            for (RemoteTablepart rtp : tableparts) {
                 try {
-                    // recover philosophers + status TODO: faire verteilung
-                    for (RemoteTablepart rtp : tableparts) {
-                        // TODO: was he hungry?
-                        rtp.createPhilosopher(i, "id " + i, true);
-                        // TODO: recover seat/fork holder
-                    }
-                // crash again
-                } catch (RemoteException ex2) {
-                    System.out.println("Following critical crash!");
-                    ex1.printStackTrace();
+                    allSeats.add(rtp.createSeat());
+                    allForks.add(rtp.createFork());
+                    break; // all on first tablepart ...
+
+                // recovery client crashed
+                } catch (RemoteException ex1) {
+                    handleCrash(0);
+                    break;
                 }
+            }
+        }
+    }
+
+    private void initAll() {
+        for (RemoteTablepart tablepart : tableparts) {
+            try {
+                // reload all refs (secure)
+                tablepart.initGlobal();
+            } catch (RemoteException ex) {
+                handleCrash(0);
+                break;
             }
         }
     }

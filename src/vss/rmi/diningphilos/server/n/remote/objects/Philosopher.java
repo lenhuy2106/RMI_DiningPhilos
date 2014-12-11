@@ -195,7 +195,6 @@ public class Philosopher extends Thread implements RemotePhilosopher {
         this.notify();
     }
 
-
     private void threadWait() {
         try {
             synchronized (this) {

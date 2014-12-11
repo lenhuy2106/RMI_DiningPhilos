@@ -17,8 +17,8 @@ import java.util.List;
  */
 public interface RemoteMaster extends Remote {
     List<RemotePhilosopher> getPhilosophers() throws RemoteException;
-    RemoteTablepart[] getTableparts() throws RemoteException;
-    int addPhilosopherOnTop(RemotePhilosopher ph) throws RemoteException;
-    boolean addTablepart(final int id, RemoteTablepart rt) throws RemoteException;
+    List<RemoteTablepart> getTableparts() throws RemoteException;
     void handleCrash(int i) throws RemoteException;
+    public List<RemoteSeat> getAllSeats() throws RemoteException;
+    public List<RemoteFork> getAllForks() throws RemoteException;
 }

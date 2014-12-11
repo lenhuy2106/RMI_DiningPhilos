@@ -87,23 +87,11 @@ public class Tablepart implements RemoteTablepart {
 
     public void initGlobal() {
 
-        try {
-            allSeats = Collections.synchronizedList(new ArrayList<>());
-            allForks = Collections.synchronizedList(new ArrayList<>());
+        // TODO
+        allSeats = Collections.synchronizedList(new ArrayList<>());
+        allForks = Collections.synchronizedList(new ArrayList<>());
 
-            for (RemoteTablepart tablepart : master.getTableparts()) {
-                // add all table seats
-                for (RemoteSeat seat : tablepart.getOwnSeats()) {
-                    allSeats.add(seat);
-                }
-                // add all table forks
-                for (RemoteFork fork : tablepart.getOwnForks()) {
-                    allForks.add(fork);
-                }
-            }
-        } catch (RemoteException ex) {
-            Logger.getLogger(Tablepart.class.getName()).log(Level.SEVERE, null, ex);
-        }
+
     }
 
     public RemotePhilosopher createPhilosopher(final int id, final String name, final boolean hungry) {
@@ -131,11 +119,12 @@ public class Tablepart implements RemoteTablepart {
     }
 
     public void callOne() throws RemoteException {
+
+        // TODO: may concurrent exc
         for (RemotePhilosopher phil : master.getPhilosophers()) {
             if (phil.getThreadState().equals(Thread.State.WAITING)) {
 
                 phil.threadNotify();
-
                 break;
             }
         }

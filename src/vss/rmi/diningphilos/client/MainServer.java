@@ -14,11 +14,14 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteFork;
 import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteMaster;
 import vss.rmi.diningphilos.server.n.remote.interfaces.RemotePhilosopher;
+import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteSeat;
 import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteTablepart;
 import vss.rmi.diningphilos.server.n.remote.objects.Master;
 
@@ -77,8 +80,10 @@ public class MainServer {
             // initiate and bind master
             // TODO: server: try to use localmaster
             Master localMaster = new Master(nPhilosophers, nTableparts, nSeats);
-            RemoteMaster master = (RemoteMaster) UnicastRemoteObject.exportObject(localMaster, 0);
-            registry.bind("master", master);
+            RemoteMaster rm = (RemoteMaster) UnicastRemoteObject.exportObject(localMaster, 0);
+            registry.bind("master", rm);
+
+            Master master = localMaster;
 
             // loop: wait for clients
             System.out.println("Waiting for " + nTableparts +" clients...");
@@ -105,27 +110,42 @@ public class MainServer {
                 // master knows all table parts
                 RemoteTablepart tablepart = (RemoteTablepart) registry.lookup("table" + i);
                 System.out.print("----- Tablepart " + i + " found -");
-                System.out.println(" has " + seatsPerStub
+                System.out.println(seatsPerStub
                                     + " seats and "
                                     + philosPerStub
                                     + " philosophers.");
 
-                // !! init local
+                // init local
                 tablepart.initLocal(seatsPerStub);
-                master.addTablepart(i, tablepart);
+                master.getTableparts().add(i, tablepart);
+                List<RemotePhilosopher> philos = master.getPhilosophers();
 
                 // create and introduce philos
                 // TODO: obergrenze: verteilung
                 for (; j < (i+1)*philosPerStub; j++) {
                     if (Arrays.asList(hungry).contains(j+"")) {
 
-                        // !!
-                        master.addPhilosopherOnTop(tablepart.createPhilosopher(j, "id " + j, true));
+                        philos.add(tablepart.createPhilosopher(j, "id " + j, true));
                         System.out.println("Philosopher [id " + j + "] enters room. He's hungry.");
                     } else {
-                        master.addPhilosopherOnTop(tablepart.createPhilosopher(j, "id " + j, false));
+                        philos.add(tablepart.createPhilosopher(j, "id " + j, false));
                         System.out.println("Philosopher [id " + j + "] enters room.");
                     }
+                }
+            }
+
+            // init Master: Seats/Forks
+            List<RemoteSeat> allSeats = master.getAllSeats();
+            List<RemoteFork> allForks = master.getAllForks();
+
+            for (RemoteTablepart tablepart : master.getTableparts()) {
+                // add all table seats
+                for (RemoteSeat seat : tablepart.getOwnSeats()) {
+                    allSeats.add(seat);
+                }
+                // add all table forks
+                for (RemoteFork fork : tablepart.getOwnForks()) {
+                    allForks.add(fork);
                 }
             }
 
@@ -137,6 +157,9 @@ public class MainServer {
             // --------------------------------------
 
             System.out.println("master enters room.");
+            System.out.println("- There are "
+                                + master.getAllSeats().size()
+                                + " seats and forks overall.");
 
             // create table
             System.out.println("table opens.");
