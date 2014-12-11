@@ -61,10 +61,10 @@ public class MainServer {
         final int nTableParts = in.nextInt();
 */
 
-        int nPhilosophers = 2;
+        int nPhilosophers = 4;
         String[] hungry = {"0"};
-        int nSeats = 2;
-        int nTableparts = 1;
+        int nSeats = 4;
+        int nTableparts = 2;
 
 
         try {
@@ -103,21 +103,27 @@ public class MainServer {
 
                 // master knows all table parts
                 RemoteTablepart tablepart = (RemoteTablepart) registry.lookup("table" + i);
-                System.out.println("table " + i + " found.");
+                System.out.println("----- Tablepart " + i + " found:");
+                System.out.println("It has " + seatsPerStub
+                                    + " seats and "
+                                    + philosPerStub
+                                    + " philosophers.");
 
                 // !! init local
                 tablepart.initLocal(seatsPerStub);
                 master.addTablepart(i, tablepart);
 
                 // create and introduce philos
-                for (; j < philosPerStub; j++) {
+                // TODO: obergrenze: verteilung
+                for (; j < (i+1)*philosPerStub; j++) {
                     if (Arrays.asList(hungry).contains(j+"")) {
 
                         // !!
                         master.addPhilosopher(j, tablepart.createPhilosopher(j, "id " + j, true, nSeats));
-                        System.out.println("id " + j + " stomach seems to growl faster.");
+                        System.out.println("Philosoph [id " + j + "] enters room. He's hungry.");
                     } else {
                         master.addPhilosopher(j, tablepart.createPhilosopher(j, "id " + j, false, nSeats));
+                        System.out.println("Philosoph [id " + j + "] enters room.");
                     }
                 }
             }

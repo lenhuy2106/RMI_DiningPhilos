@@ -49,7 +49,7 @@ public class Tablepart implements RemoteTablepart {
 
             MainClient.registry.bind("table" + id, remoteThis);
             System.out.println("table " + id + " ready.");
-            
+
         } catch (RemoteException | AlreadyBoundException ex) {
             Logger.getLogger(Tablepart.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -92,9 +92,8 @@ public class Tablepart implements RemoteTablepart {
 
             for (RemoteTablepart tablepart : master.getTableparts()) {
                 // add all table seats
-                tablepart.getOwnSeats().get(0).sit(null);
-
                 for (RemoteSeat seat : tablepart.getOwnSeats()) {
+                    System.out.println(seat);
                     allSeats.add(seat);
                 }
                 // add all table forks

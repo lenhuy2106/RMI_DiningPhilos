@@ -75,7 +75,6 @@ public class Philosopher extends Thread implements RemotePhilosopher {
         int cur = -1;
         final boolean clockwise = Math.random() < 0.5;
         int tablePartLength = tablepart.getOwnSeats().size();
-        System.err.println(tablePartLength);
 
         /* random direction?
         // TODO: local look needed?
@@ -94,7 +93,9 @@ public class Philosopher extends Thread implements RemotePhilosopher {
         if (free == -1) {
             for (RemoteSeat seat : tablepart.getAllSeats()) {
                 if (seat.sit(remoteThis)) {
-                    free = cur;
+
+                    // TODO: id necessary?
+                    free = 0;
                     break;
                 }
             }
@@ -144,6 +145,7 @@ public class Philosopher extends Thread implements RemotePhilosopher {
                 first = decision ? tablepart.getAllForks().get(left) : tablepart.getAllForks().get(right);
                 second = decision ? tablepart.getAllForks().get(right) : tablepart.getAllForks().get(left);
 
+                // TODO: first, second -> null
                 if (first.pick(remoteThis)) {
                     if (second.pick(remoteThis)) {
                         break;
