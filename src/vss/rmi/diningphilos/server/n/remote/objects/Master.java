@@ -68,7 +68,9 @@ public class Master extends Thread implements RemoteMaster {
                 RemotePhilosopher max = philosophers.get(0);
 
                 if (philosophers.get(philosophers.size()-1) != null) {
+
                     for (final RemotePhilosopher cur : philosophers) {
+                        
                         if (cur.getMeals() < min.getMeals()) {
                             min = cur;
                         } else if (cur.getMeals() > max.getMeals()) {

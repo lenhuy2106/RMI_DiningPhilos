@@ -87,10 +87,25 @@ public class Tablepart implements RemoteTablepart {
 
     public void initGlobal() {
 
-        // TODO
-        allSeats = Collections.synchronizedList(new ArrayList<>());
-        allForks = Collections.synchronizedList(new ArrayList<>());
+        // TODO: concurrent excp?
+        allSeats = new ArrayList<>();
+        allForks = new ArrayList<>();
 
+        int i = 0;
+
+        try {
+            for (RemoteSeat seat : master.getAllSeats()) {
+                allSeats.add(seat);
+                allForks.add(master.getAllForks().get(i++));
+            }
+        } catch (RemoteException ex) {
+            try {
+                master.handleCrash(0);
+            } catch (RemoteException ex1) {
+                System.err.println("SEVERE: Master crashed.");
+                ex1.printStackTrace();
+            }
+        }
 
     }
 
