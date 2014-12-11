@@ -133,9 +133,9 @@ public class Tablepart implements RemoteTablepart {
     public void callOne() throws RemoteException {
         for (RemotePhilosopher phil : master.getPhilosophers()) {
             if (phil.getThreadState().equals(Thread.State.WAITING)) {
-                synchronized (phil) {
-                    phil.notify();
-                }
+
+                phil.threadNotify();
+
                 break;
             }
         }

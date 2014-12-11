@@ -76,18 +76,16 @@ public class Philosopher extends Thread implements RemotePhilosopher {
             final boolean clockwise = Math.random() < 0.5;
             int tablePartLength = tablepart.getOwnSeats().size();
 
-            /* random direction?
-            // TODO: local look needed?
+            // random direction?
             for (int i = 0; i < tablePartLength; i++) {
 
-            cur = clockwise ? i : (tablePartLength-1)-i;
+               cur = clockwise ? i : (tablePartLength-1)-i;
 
-            if (tablepart.getOwnSeats()[cur].sit(this)) {
-            free = cur;
-            break;
+                if (tablepart.getOwnSeats().get(cur).sit(this)) {
+                free = cur;
+                break;
+                }
             }
-            }
-            */
 
             // remote look TODO: optimize
             if (free == -1) {
@@ -193,7 +191,7 @@ public class Philosopher extends Thread implements RemotePhilosopher {
         this.interrupt();
     }
 
-    public void threadNotify() {
+    public synchronized void threadNotify() {
         this.notify();
     }
 
