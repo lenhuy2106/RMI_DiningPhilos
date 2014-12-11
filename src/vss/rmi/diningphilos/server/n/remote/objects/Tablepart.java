@@ -69,9 +69,7 @@ public class Tablepart implements RemoteTablepart {
 
             for (int i = 0; i < nOwnSeats; i++) {
 
-                Seat seat = new Seat(this);
-
-                RemoteSeat rSeat = (RemoteSeat) UnicastRemoteObject.exportObject(seat, 0);
+                RemoteSeat rSeat = (RemoteSeat) UnicastRemoteObject.exportObject(new Seat(this), 0);
                 RemoteFork rFork = (RemoteFork) UnicastRemoteObject.exportObject(new Fork(), 0);
 
                 ownSeats.add(i, rSeat);
@@ -90,15 +88,17 @@ public class Tablepart implements RemoteTablepart {
             allSeats = Collections.synchronizedList(new ArrayList<>());
             allForks = Collections.synchronizedList(new ArrayList<>());
 
+            int i = 0;
             for (RemoteTablepart tablepart : master.getTableparts()) {
                 // add all table seats
                 for (RemoteSeat seat : tablepart.getOwnSeats()) {
-                    System.out.println(seat);
                     allSeats.add(seat);
+                    System.out.println(allSeats.get(i++));
                 }
                 // add all table forks
                 for (RemoteFork fork : tablepart.getOwnForks()) {
                     allForks.add(fork);
+                    System.out.println(allForks.get(i++));
                 }
             }
         } catch (RemoteException ex) {
