@@ -46,7 +46,7 @@ public class MainServer {
 
         // TODO: create dialogue add/remove objects
         // read console input
-/*        System.out.println("Number Philosophers:");
+        System.out.println("Number Philosophers:");
         final int nPhilosophers = in.nextInt();
         System.out.println("Index of very hungry Philosophers (seperated by space):");
         String hungryInput = "";
@@ -61,15 +61,14 @@ public class MainServer {
 
         // dynamic number of clients/tableparts?
         System.out.println("Number TableParts:");
-        final int nTableParts = in.nextInt();
-*/
-        // TODO: master control
+        final int nTableparts = in.nextInt();
 
+        /*
         int nPhilosophers = 4;
         String[] hungry = {"0"};
         int nSeats = 4;
         int nTableparts = 2;
-
+        */
 
         try {
             // initiate registry
@@ -191,7 +190,7 @@ public class MainServer {
             // start UI
             // localMaster.openUI();
 
-            
+
         } catch (NotBoundException | RemoteException | AlreadyBoundException ex) {
             Logger.getLogger(MainServer.class.getName()).log(Level.SEVERE, null, ex);
         }
