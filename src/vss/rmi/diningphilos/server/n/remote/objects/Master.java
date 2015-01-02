@@ -46,9 +46,7 @@ public class Master extends Thread implements RemoteMaster {
      * @param nTableparts
      */
     public Master(final int nPhilosophers, final int nTableparts, final int nSeats) {
-        // remote: read only lists
-        // TODO: philo iteration concurrent exc?
-        philosophers = new ArrayList<>(nPhilosophers);
+        philosophers = Collections.synchronizedList(new ArrayList<>(nPhilosophers));
         tableparts = new ArrayList<>(nTableparts);
         allSeats = Collections.synchronizedList(new ArrayList<>());
         allForks = Collections.synchronizedList(new ArrayList<>());
@@ -60,19 +58,17 @@ public class Master extends Thread implements RemoteMaster {
      * Start thread.
      */
     public void run() {
-
         while (!isInterrupted()) {
-
             try {
                 RemotePhilosopher min = philosophers.get(0);
                 RemotePhilosopher max = philosophers.get(0);
-
+                // meals regulation by max difference
                 if (philosophers.get(philosophers.size()-1) != null) {
-
-                    for (final RemotePhilosopher cur : philosophers) {
-
+                    for (int i = 0; i < philosophers.size(); i++) {
+                        RemotePhilosopher cur = philosophers.get(i);
                         if (cur.getMeals() < min.getMeals()) {
                             min = cur;
+
                         } else if (cur.getMeals() > max.getMeals()) {
                             max = cur;
                         }
@@ -92,11 +88,11 @@ public class Master extends Thread implements RemoteMaster {
         try {
             System.out.println("master counts: ");
             int total = 0;
-
             for (final RemotePhilosopher cur : philosophers) {
                 total += cur.getMeals();
                 System.out.printf("%15s %s %3d meals.%n", cur.getPhilName(), "ate", cur.getMeals());
             }
+
             System.out.printf("- %d meals in total.%n", total);
             System.out.println("master leaves room.");
 
@@ -131,40 +127,14 @@ public class Master extends Thread implements RemoteMaster {
         return allForks;
     }
 
-    public void openUI() {
 
-        try {
-            // hardcoded TODO: UI
-            Thread.sleep(5000);
-
-            for (RemoteTablepart tablepart : tableparts) {
-
-                // add philosopher
-                nPhilosophers++;
-                RemotePhilosopher philo = tablepart.createPhilosopher(nPhilosophers,
-                                                                "id " + nPhilosophers,
-                                                                true);
-                philosophers.add(philo);
-
-                // add seat, fork
-                nSeats++;
-                RemoteSeat seat = tablepart.createSeat();
-                RemoteFork fork = tablepart.createFork();
-            }
-
-            for (RemoteTablepart tablepart : tableparts) {
-                // reload all refs (secure)
-                tablepart.initGlobal();
-            }
-        } catch (RemoteException | InterruptedException ex) {
-            Logger.getLogger(Master.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
 
     public void handleCrash(int i) {
         // TODO: faire verteilung
 
         System.out.println("------ Start crash handling:");
+
+        // hibernateAll();
 
         int idTablepart = 0;
 
@@ -181,80 +151,84 @@ public class Master extends Thread implements RemoteMaster {
             System.out.println("Tablepart " + idTablepart + " crashed.");
 
             tableparts.remove(idTablepart);
-            recoverPhilosophers();
             recoverSeatsAndForks();
+            recoverPhilosophers();
 
             System.out.println("\nRecovery successful: Restarting Now!");
             initAll();
-
-            for (RemotePhilosopher rp : philosophers) {
-                try {
-                    rp.threadNotifyOrStart();
-                } catch (RemoteException ex) {
-                    handleCrash(0);
-                    break;
-                }
-            }
-
+            restartPhilosophers();
             // restart master control
             run();
         }
     }
 
+    private void restartPhilosophers() {
+        for (int j = 0; j < philosophers.size(); j++) {
+            RemotePhilosopher rp = philosophers.get(j);
+
+            try {
+                philosophers.get(j).getPhilName();
+                System.out.println(philosophers.get(j));
+                System.out.println("wake up " + philosophers.get(j).getPhilName());
+                philosophers.get(j).threadNotifyOrStart();
+
+            } catch (RemoteException ex) {
+                System.err.println("SEVERE: Starting philosophers failed.");
+                handleCrash(0);
+                break;
+            }
+        }
+    }
+
     private void recoverPhilosophers() {
 
-        System.out.print("Recover Philosophers...");
+        System.out.print("\nRecover Philosophers...");
 
         int idPhilo = 0;
+        int avgMeals = getAvgMeals();
 
         for (RemotePhilosopher rph : philosophers) {
         // find crashed philosopher
             try {
                 System.out.print("[" + rph.getPhilName() + "]");
-                rph.threadInterrupt();
+                // philo threads are self-responsible for crash wait state
 
             } catch (RemoteException ex) {
 
                 // find subclient TODO: not all on first tablepart ...
+                // TODO: not every tablepart
                 for (RemoteTablepart rtp : tableparts) {
                     try {
                         // TODO: was he hungry?
-
-                        RemotePhilosopher rp = rtp.createPhilosopher(idPhilo, "id " + idPhilo, true);
+                        RemotePhilosopher rp = rtp.createPhilosopher(idPhilo, "id " + idPhilo, true, avgMeals);
                         philosophers.set(idPhilo, rp);
                         System.out.print("[id " + idPhilo + " -> " + rtp.getId() + "]");
-                    // recovery client crashed
+
                     } catch (RemoteException ex1) {
+                        // recovery client crashed
                         handleCrash(0);
                         break;
                     }
                 }
             }
+
             idPhilo++;
         }
     }
 
     private void recoverSeatsAndForks() {
-
         System.out.print("\nRecover Seats/Forks...");
-
-
         int idSeat = 0;
-
         for (RemoteSeat rst : allSeats) {
-
             // find crashed philosopher
             try {
-                System.out.print("[" + idSeat + "]");
-
                 rst.leave();
                 allForks.get(idSeat).drop();
+                System.out.print("[" + idSeat + "]");
 
             } catch (RemoteException ex) {
-
                 // find subclient TODO: not all on first tablepart ...
                 for (RemoteTablepart rtp : tableparts) {
-
                     try {
                         allSeats.set(idSeat, rtp.createSeat());
                         allForks.set(idSeat, rtp.createFork());
@@ -263,25 +237,42 @@ public class Master extends Thread implements RemoteMaster {
                     // recovery client crashed
                     } catch (RemoteException ex1) {
                         ex1.printStackTrace();
-                        //handleCrash(0);
-                        //break; // TODO: break or recursive?
+                        // handleCrash(0);
                     }
                 }
             }
+
             idSeat++;
         }
     }
 
     private void initAll() {
-
         for (RemoteTablepart tablepart : tableparts) {
             try {
                 // reload all refs (secure)
                 tablepart.initGlobal();
+
             } catch (RemoteException ex) {
                 handleCrash(0);
                 break;
             }
         }
+    }
+
+    public int getAvgMeals() {
+        int avg = 0;
+        for (RemotePhilosopher rp : philosophers) {
+            try {
+                rp.getPhilName();
+                avg += rp.getMeals();
+
+            } catch (RemoteException ex) {
+                // skip crashed philos
+            }
+        }
+
+        avg /= philosophers.size();
+        System.out.println("Current average meals count: " + avg);
+        return avg;
     }
 }

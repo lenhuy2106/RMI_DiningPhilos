@@ -64,7 +64,6 @@ public class Tablepart implements RemoteTablepart {
     public void initLocal(final int nOwnSeats) {
 
         try {
-            // TODO: synchronized
             ownSeats = Collections.synchronizedList(new ArrayList<>());
             ownForks = Collections.synchronizedList(new ArrayList<>());
             master = (RemoteMaster) MainClient.registry.lookup("master");
@@ -74,8 +73,6 @@ public class Tablepart implements RemoteTablepart {
                 ownSeats.add(i, new Seat(remoteThis));
                 ownForks.add(i, new Fork());
             }
-            // last fork is remote
-            // forks[nSeats] =
 
         } catch (RemoteException | NotBoundException ex) {
             Logger.getLogger(Tablepart.class.getName()).log(Level.SEVERE, null, ex);
@@ -94,6 +91,10 @@ public class Tablepart implements RemoteTablepart {
             for (RemoteSeat seat : master.getAllSeats()) {
                 allSeats.add(seat);
                 allForks.add(master.getAllForks().get(i++));
+
+//                allSeats.set(i, seat);
+//                allForks.set(i, master.getAllForks().get(i++));
+
             }
         } catch (RemoteException ex) {
             try {
@@ -110,6 +111,12 @@ public class Tablepart implements RemoteTablepart {
 
         // philosopher can walk
         return new Philosopher(name, remoteThis, hungry);
+    }
+
+    public RemotePhilosopher createPhilosopher(final int id, final String name, final boolean hungry, final int meals) throws RemoteException {
+
+        // philosopher can walk
+        return new Philosopher(name, remoteThis, hungry, meals);
     }
 
     public RemoteSeat createSeat() throws RemoteException {
@@ -135,7 +142,6 @@ public class Tablepart implements RemoteTablepart {
         // TODO: may concurrent exc
         for (RemotePhilosopher phil : master.getPhilosophers()) {
             if (phil.getThreadState().equals(Thread.State.WAITING)) {
-
                 phil.threadNotifyOrStart();
                 break;
             }

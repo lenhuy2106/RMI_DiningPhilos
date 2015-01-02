@@ -22,7 +22,7 @@ public interface RemotePhilosopher extends Remote {
     void threadStart() throws RemoteException;
     void threadInterrupt() throws RemoteException;
     void threadNotifyOrStart() throws RemoteException;
-    void eat()throws InterruptedException, RemoteException;
+    void search()throws InterruptedException, RemoteException;
     void run() throws RemoteException;
     String getPhilName() throws RemoteException;
     int getMeals() throws RemoteException;

@@ -19,7 +19,8 @@ public interface RemoteTablepart extends Remote {
     int getId() throws RemoteException;
     void initLocal(final int nSeats) throws RemoteException;
     void initGlobal() throws RemoteException;
-    RemotePhilosopher createPhilosopher(final int id, final String name, final boolean hungry) throws RemoteException;;
+    RemotePhilosopher createPhilosopher(final int id, final String name, final boolean hungry) throws RemoteException;
+    RemotePhilosopher createPhilosopher(final int id, final String name, final boolean hungry, final int meals) throws RemoteException;
     RemoteSeat createSeat() throws RemoteException;
     RemoteFork createFork() throws RemoteException;
     int getCoreCount() throws RemoteException;

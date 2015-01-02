@@ -18,7 +18,7 @@ import java.util.List;
 public interface RemoteMaster extends Remote {
     List<RemotePhilosopher> getPhilosophers() throws RemoteException;
     List<RemoteTablepart> getTableparts() throws RemoteException;
+    List<RemoteSeat> getAllSeats() throws RemoteException;
+    List<RemoteFork> getAllForks() throws RemoteException;
     void handleCrash(int i) throws RemoteException;
-    public List<RemoteSeat> getAllSeats() throws RemoteException;
-    public List<RemoteFork> getAllForks() throws RemoteException;
 }

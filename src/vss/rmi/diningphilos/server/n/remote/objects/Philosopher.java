@@ -57,29 +57,29 @@ public class Philosopher extends Thread implements RemotePhilosopher {
         this.hungry = hungry;
         meals = 0;
         banned = false;
-
+        setDaemon(true);
         // remote itself
         remoteThis = (RemotePhilosopher) UnicastRemoteObject.exportObject(this, 0);
     }
 
+    public Philosopher(final String name, final RemoteTablepart tablePart, final boolean hungry, final int meals) throws RemoteException {
+        this(name, tablePart, hungry);
+        this.meals = meals;
+    }
+
     public int lookForSeat() {
-
         int curTablePart = 0;
-
         try {
             int free = -1;
             int cur = -1;
             final boolean clockwise = Math.random() < 0.5;
             int tablePartLength = tablepart.getOwnSeats().size();
-
             // random direction?
             for (int i = 0; i < tablePartLength; i++) {
-
-               cur = clockwise ? i : (tablePartLength-1)-i;
-
+                cur = clockwise ? i : (tablePartLength-1)-i;
                 if (tablepart.getOwnSeats().get(cur).sit(this)) {
-                free = cur;
-                break;
+                    free = cur;
+                    break;
                 }
             }
 
@@ -87,7 +87,6 @@ public class Philosopher extends Thread implements RemotePhilosopher {
             if (free == -1) {
                 for (RemoteSeat seat : tablepart.getAllSeats()) {
                     if (seat.sit(remoteThis)) {
-
                         free = 0;
                         break;
                     }
@@ -95,8 +94,10 @@ public class Philosopher extends Thread implements RemotePhilosopher {
             }
 
             return free;
+
         } catch (RemoteException ex) {
-            // ex.printStackTrace();
+            System.err.println(getPhilName()
+                    + " failed at lookForSeat().");
             threadWait();
             return lookForSeat();
         }
@@ -105,19 +106,17 @@ public class Philosopher extends Thread implements RemotePhilosopher {
     /**
      * Going to eat.
      * @throws InterruptedException
+     * @throws IndexOutOfBoundsException
+     * @throws ArithmeticException
      */
-    public void eat() throws InterruptedException {
-
+    public void search() throws InterruptedException {
         try {
             int i = 0;
             RemoteFork first;
             RemoteFork second;
-
             System.out.printf("%-30s %s %n", name, "seaches seat.");
-
             // waiting for a seat
             while (true) {
-
                 i = lookForSeat();
                 if (i != -1) {
                     break;
@@ -130,83 +129,96 @@ public class Philosopher extends Thread implements RemotePhilosopher {
                 }
             }
 
-            int nAllSeats = tablepart.getAllSeats().size();
-            // System.out.println(nAllSeats);
+            eat(i);
 
-            final int left = (i) % nAllSeats;
-            final int right = (i + 1) % nAllSeats;
-
-            System.out.printf("%-45s %s %n", name, "needs forks " + left + " " + right + ".");
-
-            //waiting for fork
-            while (true) {
-
-                // left or right first
-                final boolean decision = Math.random() < 0.5;
-                first = decision ? tablepart.getAllForks().get(left) : tablepart.getAllForks().get(right);
-                second = decision ? tablepart.getAllForks().get(right) : tablepart.getAllForks().get(left);
-
-                // TODO: first, second -> null
-                if (first.pick(remoteThis)) {
-                    if (second.pick(remoteThis)) {
-                        break;
-                    } else {
-                        first.drop();
-                    }
-                }
-            }
-
-            System.out.printf("%-60s %s %d.%n", name, "eats at", i);
-            Thread.sleep(1);
-
-            second.drop();
-            first.drop();
-            tablepart.getOwnSeats().get(i).leave();
-            meals++;
-
-        } catch (RemoteException ex) {
+        } catch (RemoteException | IndexOutOfBoundsException | ArithmeticException ex) {
+            System.err.println(getPhilName()
+                                + " failed at eat().");
             threadWait();
-            // TODO: alright?
-            eat();
+            search();
         }
     }
 
-    public State getThreadState() {
+    private void eat(int i) throws RemoteException, InterruptedException {
+        RemoteFork first;
+        RemoteFork second;
+        int nAllSeats = tablepart.getAllSeats().size();
+        final int left = (i) % nAllSeats;
+        final int right = (i + 1) % nAllSeats;
+        System.out.printf("%-45s %s %n", name, "needs forks " + left + " " + right + ".");
+        //waiting for fork
+        while (true) {
+            // left or right first
+            final boolean decision = Math.random() < 0.5;
+            first = decision ? tablepart.getAllForks().get(left) : tablepart.getAllForks().get(right);
+            second = decision ? tablepart.getAllForks().get(right) : tablepart.getAllForks().get(left);
+            // TODO: first, second -> null
+            if (first.pick(remoteThis)) {
+                if (second.pick(remoteThis)) {
+                    break;
+
+                } else {
+                    first.drop();
+                }
+            }
+        }
+        System.out.printf("%-60s %s %d.%n", name, "eats at", i);
+        Thread.sleep(1);
+        second.drop();
+        first.drop();
+        tablepart.getOwnSeats().get(i).leave();
+        meals++;
+    }
+
+    public synchronized State getThreadState() {
         return getState();
     }
 
-    public void setThreadDaemon(final boolean flag) {
+    public synchronized void setThreadDaemon(final boolean flag) {
         this.setDaemon(flag);
     }
 
-    public void threadStart() {
+    public synchronized void threadStart() {
         this.start();
     }
 
-    public void threadInterrupt() {
+    public synchronized void threadInterrupt() {
         this.interrupt();
     }
 
     public synchronized void threadNotifyOrStart() {
-
-        // runnable / new
-        if (this.getState() == State.WAITING) {
+        if (this.getState().equals(State.WAITING)) {
             this.notify();
-        } else {
+            System.out.println(getPhilName()
+                    + " has been woken up.");
 
-        // TODO: cant start thread - illegal state exc
-        //    this.start();
+        } else if (this.getState().equals(State.NEW)) {
+            this.start();
+            System.out.println(getPhilName()
+                                + " has been added.");
+
+        } else {
+            // // TODO: delete print - performance leak
+            System.err.println(this.getPhilName()
+                    + " has unexpected state: "
+                    + this.getState());
+
+            // // recursive loop validation for thread to wait
+            // threadWait();
         }
     }
 
-    private void threadWait() {
+    // CONTINUE: synchronized block
+
+    /**
+     * Only called by this.
+     */
+    private synchronized void threadWait() {
         try {
-            synchronized (this) {
-                System.out.println(name + " is waiting for crash handling.");
-                this.wait();
-            }
-        } catch (InterruptedException ix) {
-            threadWait();
+            System.out.println(name + " is waiting for crash handling.");
+            wait();
+        } catch (InterruptedException ex) {
+            Logger.getLogger(Philosopher.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -214,7 +226,6 @@ public class Philosopher extends Thread implements RemotePhilosopher {
      * Starts thread.
      */
     public void run() {
-
         int mealsLeft = 3;
         if (hungry) {
             setPriority(Thread.MAX_PRIORITY);
@@ -223,22 +234,25 @@ public class Philosopher extends Thread implements RemotePhilosopher {
         try {
             while (!isInterrupted()) {
                 System.out.println(name + " meditates.");
-//                int meditate = hungry ? 0 : 5;
+                // int meditate = hungry ? 0 : 5;
                 Thread.sleep(5);
                 System.out.printf("%-15s %s %n", name, "gets hungry.");
-                eat();
+                search();
                 System.out.printf("%-75s %s %n", name, "leaves.");
-
                 if (--mealsLeft == 0) {
                     System.out.printf("%-90s %s %n", name, "sleeps.");
                     Thread.sleep(10);
                     mealsLeft = 3;
+
                 } else if (banned) {
                     System.out.printf("%-90s %s %n", name, "banned.");
                     Thread.sleep(5);
                     banned = false;
                 }
             }
+
+            System.err.println("Unreachable.");
+
         } catch (InterruptedException ex) {
             System.out.println(name + " starves to death.");
         }
