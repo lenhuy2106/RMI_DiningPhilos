@@ -60,4 +60,8 @@ public class Seat implements RemoteSeat {
         free = true;
         tablepart.callOne();
     }
+
+    public RemoteTablepart getTablepart() throws RemoteException {
+        return tablepart;
+    }
 }

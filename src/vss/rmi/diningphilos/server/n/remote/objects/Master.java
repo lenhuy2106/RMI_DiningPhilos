@@ -275,4 +275,8 @@ public class Master extends Thread implements RemoteMaster {
         System.out.println("Current average meals count: " + avg);
         return avg;
     }
+
+    public void setPhilosopher(final int id, final RemotePhilosopher rp) throws RemoteException {
+        philosophers.set(id, rp);
+    }
 }

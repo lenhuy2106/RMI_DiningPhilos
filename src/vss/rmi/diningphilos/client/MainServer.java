@@ -176,7 +176,7 @@ public class MainServer {
 
             }).start();
             // start UI
-            openUI(localMaster);
+            // openUI(localMaster);
 
         } catch (NotBoundException | RemoteException | AlreadyBoundException ex) {
             Logger.getLogger(MainServer.class.getName()).log(Level.SEVERE, null, ex);

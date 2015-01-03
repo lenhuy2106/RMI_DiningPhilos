@@ -17,4 +17,5 @@ import java.rmi.RemoteException;
 public interface RemoteSeat extends Remote {
     boolean sit(RemotePhilosopher examiner) throws RemoteException;
     void leave() throws RemoteException;
+    RemoteTablepart getTablepart() throws RemoteException;
 }

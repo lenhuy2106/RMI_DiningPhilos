@@ -20,9 +20,9 @@ public interface RemotePhilosopher extends Remote {
     State getThreadState() throws RemoteException;
     void setThreadDaemon(final boolean flag) throws RemoteException;
     void threadStart() throws RemoteException;
+    void threadStart(int migratePos) throws RemoteException;
     void threadInterrupt() throws RemoteException;
     void threadNotifyOrStart() throws RemoteException;
-    void search()throws InterruptedException, RemoteException;
     void run() throws RemoteException;
     String getPhilName() throws RemoteException;
     int getMeals() throws RemoteException;

@@ -110,13 +110,13 @@ public class Tablepart implements RemoteTablepart {
     public RemotePhilosopher createPhilosopher(final int id, final String name, final boolean hungry) throws RemoteException {
 
         // philosopher can walk
-        return new Philosopher(name, remoteThis, hungry);
+        return new Philosopher(id, name, remoteThis, hungry);
     }
 
     public RemotePhilosopher createPhilosopher(final int id, final String name, final boolean hungry, final int meals) throws RemoteException {
 
         // philosopher can walk
-        return new Philosopher(name, remoteThis, hungry, meals);
+        return new Philosopher(id, name, remoteThis, hungry, meals);
     }
 
     public RemoteSeat createSeat() throws RemoteException {
@@ -138,7 +138,6 @@ public class Tablepart implements RemoteTablepart {
     }
 
     public void callOne() throws RemoteException {
-
         // TODO: may concurrent exc
         for (RemotePhilosopher phil : master.getPhilosophers()) {
             if (phil.getThreadState().equals(Thread.State.WAITING)) {
