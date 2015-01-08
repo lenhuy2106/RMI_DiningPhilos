@@ -88,28 +88,34 @@ public class MainServer {
             System.out.println("Connected.");
             // communication with clients --> tables
             // TODO: gleichmäßige verteilung
-            int seatsPerStub = nSeats / nTableparts;
+            int seatsPerStub[] = new int[nTableparts];
+            for (int i = 0; i < nSeats; i++) {
+                seatsPerStub[i%nTableparts] += 1;
+            }
             // TODO: lastenabhängige verteilung
             // int cores = stubTable.getCoreCount();
-            int philosPerStub = nPhilosophers / nTableparts;
+            int philosPerStub[] = new int[nTableparts];
+            for (int i = 0; i < nPhilosophers; i++) {
+                philosPerStub[i%nTableparts] += 1;
+            }
             // get remote tables
-            int j = 0;
+             int j = 0;
             for (int i = 0; i < nTableparts; i++) {
                 // master knows all table parts
                 RemoteTablepart tablepart = (RemoteTablepart) registry.lookup("table" + i);
-                System.out.print("----- Tablepart " + i + " found -");
-                System.out.println(seatsPerStub
+                System.out.println("----- Tablepart " + i + " found -");
+                System.out.println(seatsPerStub[i]
                                     + " seats and "
-                                    + philosPerStub
+                                    + philosPerStub[i]
                                     + " philosophers.");
 
                 // init local
-                tablepart.initLocal(seatsPerStub);
+                tablepart.initLocal(seatsPerStub[i]);
                 master.getTableparts().add(i, tablepart);
                 List<RemotePhilosopher> philos = master.getPhilosophers();
                 // create and introduce philos
                 // TODO: obergrenze: verteilung
-                for (; j < (i+1)*philosPerStub; j++) {
+                for (; j < (i+1)*philosPerStub[i]; j++) {
                     if (Arrays.asList(hungry).contains(j+"")) {
                         philos.add(tablepart.createPhilosopher(j, "id " + j, true));
                         System.out.println("Philosopher [id " + j + "] enters room. He's hungry.");
@@ -120,6 +126,28 @@ public class MainServer {
                     }
                 }
             }
+//
+//            // init Seats and Philos.
+//            for (int i = 0; i < nSeats; i++){
+//                RemoteTablepart tablepart = (RemoteTablepart) registry.lookup("table" + i%nTableparts);
+//                tablepart.initLocal(0);
+//                master.getTableparts().add(i, tablepart);
+//                tablepart.createSeat();
+//            }
+//
+//            List<RemotePhilosopher> philos = master.getPhilosophers();
+//            for (int i = 0; i < nPhilosophers; i++) {
+//                RemoteTablepart tablepart = (RemoteTablepart) registry.lookup("table" + i%nTableparts);
+//                if (Arrays.asList(hungry).contains(i+"")) {
+//                    philos.add(tablepart.createPhilosopher(i, "id " + i, true));
+//                    System.out.println("Philosopher [id " + i + "] enters table " + i%nTableparts + ". He's hungry.");
+//
+//                } else {
+//                    philos.add(tablepart.createPhilosopher(i, "id " + i, false));
+//                    System.out.println("Philosopher [id " + i + "] enters table " + i%nTableparts + ".");
+//                }
+//            }
+
 
             // init Master: Seats/Forks
             List<RemoteSeat> allSeats = master.getAllSeats();
