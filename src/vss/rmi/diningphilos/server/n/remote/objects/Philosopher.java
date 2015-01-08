@@ -155,7 +155,7 @@ public class Philosopher extends Thread implements RemotePhilosopher {
         } catch (RemoteException | IndexOutOfBoundsException | ArithmeticException ex) {
             System.err.println(getPhilName()
                                 + " failed at search().");
-            ex.printStackTrace();
+            // ex.printStackTrace();
             threadWait();
             i = search();
         }
@@ -273,7 +273,7 @@ public class Philosopher extends Thread implements RemotePhilosopher {
                     } catch (ArithmeticException | IndexOutOfBoundsException | RemoteException ex) {
                         System.err.println(getPhilName()
                                             + " failed at eating.");
-                        ex.printStackTrace();
+                        //ex.printStackTrace();
                         threadWait();
                     }
                 }

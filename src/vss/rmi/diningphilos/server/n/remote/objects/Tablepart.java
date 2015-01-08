@@ -8,6 +8,7 @@
 
 package vss.rmi.diningphilos.server.n.remote.objects;
 
+import java.rmi.AccessException;
 import java.rmi.AlreadyBoundException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -48,11 +49,17 @@ public class Tablepart implements RemoteTablepart {
         try {
             id = MainClient.registry.list().length-1; // minus master
             remoteThis = (RemoteTablepart) UnicastRemoteObject.exportObject(this, 0);
+            System.out.println("go");
+            master = (RemoteMaster) MainClient.registry.lookup("master");
+            System.out.println("go2");
+            // MainClient.registry.bind("table" + id, remoteThis);
+            master.proxyBind("table" + id, remoteThis);
 
-            MainClient.registry.bind("table" + id, remoteThis);
             System.out.println("table " + id + " ready.");
 
-        } catch (RemoteException | AlreadyBoundException ex) {
+        } catch (RemoteException ex) {
+            Logger.getLogger(Tablepart.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (NotBoundException ex) {
             Logger.getLogger(Tablepart.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -66,7 +73,7 @@ public class Tablepart implements RemoteTablepart {
         try {
             ownSeats = Collections.synchronizedList(new ArrayList<>());
             ownForks = Collections.synchronizedList(new ArrayList<>());
-            master = (RemoteMaster) MainClient.registry.lookup("master");
+
 
             for (int i = 0; i < nOwnSeats; i++) {
 
@@ -74,7 +81,7 @@ public class Tablepart implements RemoteTablepart {
                 ownForks.add(i, new Fork());
             }
 
-        } catch (RemoteException | NotBoundException ex) {
+        } catch (RemoteException ex) {
             Logger.getLogger(Tablepart.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

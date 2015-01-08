@@ -8,7 +8,10 @@
 
 package vss.rmi.diningphilos.server.n.remote.objects;
 
+import java.rmi.AlreadyBoundException;
+import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.rmi.registry.Registry;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -31,6 +34,8 @@ import vss.rmi.diningphilos.server.n.remote.interfaces.RemoteTablepart;
  */
 public class Master extends Thread implements RemoteMaster {
 
+    Registry registry;
+
     /** Array of all philosophers. */
     private final List<RemotePhilosopher> philosophers;
     private final List<RemoteTablepart> tableparts;
@@ -45,13 +50,22 @@ public class Master extends Thread implements RemoteMaster {
      * @param nPhilosophers Number of philosophers.
      * @param nTableparts
      */
-    public Master(final int nPhilosophers, final int nTableparts, final int nSeats) {
+    public Master(Registry reg, final int nPhilosophers, final int nTableparts, final int nSeats) {
+        this.registry = reg;
         philosophers = Collections.synchronizedList(new ArrayList<>(nPhilosophers));
         tableparts = new ArrayList<>(nTableparts);
         allSeats = Collections.synchronizedList(new ArrayList<>());
         allForks = Collections.synchronizedList(new ArrayList<>());
         this.nSeats = nSeats;
         this.nPhilosophers = nPhilosophers;
+    }
+
+    public void proxyBind (String name, Remote obj) {
+        try {
+            registry.bind(name, obj);
+        } catch (RemoteException | AlreadyBoundException ex) {
+            Logger.getLogger(Master.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     /**

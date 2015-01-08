@@ -38,7 +38,7 @@ public class MainServer {
      * alle. Sie kann mit einem Raum verglichen werden, in der die Objekte
      * existieren.
      *
-     * @param args
+     * @param args /-
      */
     public static void main(final String[]args) {
         final Scanner in = new Scanner(System.in);
@@ -60,20 +60,13 @@ public class MainServer {
         System.out.println("Number TableParts:");
         final int nTableparts = in.nextInt();
 
-        /*
-        int nPhilosophers = 4;
-        String[] hungry = {"0"};
-        int nSeats = 4;
-        int nTableparts = 2;
-        */
-
         try {
             // initiate registry
             LocateRegistry.createRegistry(1099);
             Registry registry = LocateRegistry.getRegistry();
             // initiate and bind master
             // TODO: server: try to use localmaster
-            Master localMaster = new Master(nPhilosophers, nTableparts, nSeats);
+            Master localMaster = new Master(registry, nPhilosophers, nTableparts, nSeats);
             RemoteMaster rm = (RemoteMaster) UnicastRemoteObject.exportObject(localMaster, 0);
             registry.bind("master", rm);
             Master master = localMaster;
@@ -176,7 +169,7 @@ public class MainServer {
 
             }).start();
             // start UI
-            // openUI(localMaster);
+            openUI(localMaster);
 
         } catch (NotBoundException | RemoteException | AlreadyBoundException ex) {
             Logger.getLogger(MainServer.class.getName()).log(Level.SEVERE, null, ex);

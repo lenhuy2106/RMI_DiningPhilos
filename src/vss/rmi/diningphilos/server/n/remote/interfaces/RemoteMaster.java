@@ -20,6 +20,7 @@ public interface RemoteMaster extends Remote {
     List<RemoteTablepart> getTableparts() throws RemoteException;
     List<RemoteSeat> getAllSeats() throws RemoteException;
     List<RemoteFork> getAllForks() throws RemoteException;
+    void proxyBind (String name, Remote obj) throws RemoteException;
     void handleCrash(final int i) throws RemoteException;
     void setPhilosopher(final int id, final RemotePhilosopher rp) throws RemoteException;
 }

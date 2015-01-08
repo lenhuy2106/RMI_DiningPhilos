@@ -23,10 +23,11 @@ public class MainClient implements Remote {
 
     public static void main(String[] args) throws RemoteException {
 
-        String serverIp = "localhost";
+        String serverIp = "10.179.13.59";
 
             // RemoteTablepart stubTable = (RemoteTablepart) UnicastRemoteObject.exportObject(table, 0);
             registry = LocateRegistry.getRegistry(serverIp, 1099);
+            System.out.println("ja");
             Tablepart tablepart = new Tablepart();
 
     }
